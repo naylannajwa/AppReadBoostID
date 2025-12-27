@@ -99,12 +99,12 @@ class LoginViewModel(
                 }
 
                 loginResult.onSuccess { currentUser ->
-                    userPreferences.saveCurrentUser(currentUser)
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        loginSuccess = true,
-                        errorMessage = null
-                    )
+                        userPreferences.saveCurrentUser(currentUser)
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            loginSuccess = true,
+                            errorMessage = null
+                        )
                 }.onFailure { exception ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,

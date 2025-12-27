@@ -154,38 +154,38 @@ class RegistrationViewModel(
                     try {
                         // Step 2: Save user data to local database for offline access
                         // Check if username is already taken locally
-                        val usernameTakenResult = userRepository.isUsernameTaken(currentState.username)
-                        usernameTakenResult.onSuccess { isTaken ->
-                            if (isTaken) {
+                val usernameTakenResult = userRepository.isUsernameTaken(currentState.username)
+                usernameTakenResult.onSuccess { isTaken ->
+                    if (isTaken) {
                                 // Try to delete Firebase user if local username is taken
                                 firebaseAuthService.signOut()
-                                _uiState.value = _uiState.value.copy(
-                                    isLoading = false,
-                                    usernameError = "Username sudah digunakan"
-                                )
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            usernameError = "Username sudah digunakan"
+                        )
                                 return@onSuccess
-                            }
-                        }.onFailure { exception ->
+                    }
+                }.onFailure { exception ->
                             // Continue with registration even if local check fails
                             // Firebase registration already succeeded
                         }
 
                         // Create local user record (password not needed since Firebase handles auth)
                         val passwordHash = hashPassword(currentState.password) // Keep for potential offline fallback
-                        val user = User(
-                            username = currentState.username,
-                            email = currentState.email,
+                val user = User(
+                    username = currentState.username,
+                    email = currentState.email,
                             passwordHash = passwordHash, // Store for potential offline access
-                            fullName = currentState.fullName
-                        )
+                    fullName = currentState.fullName
+                )
 
                         val localRegisterResult = userRepository.registerUser(user)
                         localRegisterResult.onSuccess { userId ->
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                registrationSuccess = true,
-                                errorMessage = null
-                            )
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        registrationSuccess = true,
+                        errorMessage = null
+                    )
                         }.onFailure { exception ->
                             // Firebase registration succeeded but local failed
                             // Still consider registration successful since Firebase auth works

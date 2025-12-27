@@ -117,7 +117,7 @@ fun ArticleDetailScreen(
                                 controlsVisible = !controlsVisible
                             }
                         )
-                    }
+                        }
             ) {
                 LazyColumn(
                     state = listState,
@@ -199,9 +199,9 @@ fun ArticleDetailScreen(
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Medium
-                                )
-                            }
+                            )
                         }
+                    }
                     }
 
                     // Article content with optimal typography
