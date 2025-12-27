@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ReadBoost ID</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_articles">Articles</string>
+    <string name="nav_leaderboard">Leaderboard</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">ReadBoost ID</string>
+    <string name="progress_title">Progress Kamu</string>
+    <string name="daily_target_title">Target Harian</string>
+    <string name="recent_articles">Artikel Terbaru</string>
+    <string name="see_all">Lihat Semua</string>
+
+    <!-- Reading -->
+    <string name="reading_time">Waktu Membaca</string>
+    <string name="target_format">Target: %d menit</string>
+    <string name="read_today">Baca %d menit hari ini</string>
+    <string name="gain_xp">Raih XP dan tingkatkan streak!</string>
+
+    <!-- Stats -->
+    <string name="total_xp">Total XP</string>
+    <string name="streak">Streak</string>
+    <string name="target">Target</string>
+    <string name="days_format">%d hari</string>
+    <string name="minutes_format">%d min</string>
+    <string name="xp_format">+%d XP</string>
+
+    <!-- Notes -->
+    <string name="notes_title">Catatan Saya</string>
+    <string name="add_note">Tambah Catatan</string>
+    <string name="edit_note">Edit Catatan</string>
+    <string name="delete_note">Hapus Catatan</string>
+    <string name="note_placeholder">Tulis catatan...</string>
+    <string name="save">Simpan</string>
+    <string name="cancel">Batal</string>
+    <string name="no_notes">Belum ada catatan</string>
+    <string name="no_notes_hint">Belum ada catatan. Tap tombol + untuk menambah catatan.</string>
+
+    <!-- Leaderboard -->
+    <string name="leaderboard_title">Leaderboard Juara</string>
+    <string name="top_readers">Top Readers</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profil &amp; Statistik</string>
+    <string name="reading_stats">Statistik Membaca</string>
+    <string name="change_target">Ubah Target Harian</string>
+    <string name="my_notes">Catatan Saya</string>
+    <string name="about_app">Tentang Aplikasi</string>
+    <string name="active_reader">Pembaca Aktif</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Pengaturan</string>
+    <string name="select_target">Pilih target membaca harian:</string>
+
+    <!-- Articles -->
+    <string name="all_articles">Semua Artikel</string>
+    <string name="filter_category">Filter Kategori</string>
+    <string name="read_article">Baca Artikel</string>
+
+    <!-- Categories -->
+    <string name="category_all">All</string>
+    <string name="category_technology">Teknologi</string>
+    <string name="category_science">Sains</string>
+    <string name="category_psychology">Psikologi</string>
+    <string name="category_history">Sejarah</string>
+    <string name="category_motivation">Motivasi</string>
+    <string name="category_social">Sosial &amp; Budaya</string>
+
+    <!-- Common -->
+    <string name="loading">Memuat...</string>
+    <string name="error">Terjadi kesalahan</string>
+    <string name="back">Kembali</string>
+    <string name="close">Tutup</string>
+</resources>
