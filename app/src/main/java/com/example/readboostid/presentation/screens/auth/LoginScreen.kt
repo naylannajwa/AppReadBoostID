@@ -142,7 +142,7 @@ fun HeaderSection() {
                 // Logo icon
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = "ReadBoost Logo",
+                    contentDescription = "Logo ReadBoost",
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
@@ -188,7 +188,7 @@ fun HeaderSection() {
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data("https://picsum.photos/seed/login/800/300")
+                        .data("https://firebasestorage.googleapis.com/v0/b/readboost-9999.appspot.com/o/login_banner.png?alt=media&token=abcdef12-3456-7890-abcd-ef1234567890")
                         .crossfade(true)
                         .build(),
                     contentDescription = "Login Banner",
@@ -285,7 +285,7 @@ fun LoginForm(
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        contentDescription = if (passwordVisible) "Sembunyikan password" else "Tampilkan password",
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }

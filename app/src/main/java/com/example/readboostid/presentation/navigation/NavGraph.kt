@@ -16,7 +16,6 @@ import com.readboost.id.presentation.screens.admin.AdminAuthScreen
 import com.readboost.id.presentation.screens.admin.AdminDashboardScreen
 import com.readboost.id.presentation.screens.admin.AdminScreen
 import com.readboost.id.presentation.screens.admin.EditArticleScreen
-import com.readboost.id.presentation.screens.admin.UserManagementScreen
 import com.readboost.id.presentation.screens.home.HomeScreen
 import com.readboost.id.presentation.screens.article.ArticleListScreen
 import com.readboost.id.presentation.screens.article.ArticleDetailScreen
@@ -29,7 +28,7 @@ import com.readboost.id.presentation.screens.settings.SettingsScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Welcome.route
+    startDestination: String = Screen.Splash.route // Always start with Splash
 ) {
     NavHost(
         navController = navController,
@@ -37,11 +36,19 @@ fun NavGraph(
     ) {
         composable(Screen.Splash.route) {
             SplashScreen(
-                onNavigateToLogin = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Splash.route) { 
-                            inclusive = true 
-                        }
+                onNavigateToWelcome = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToAdmin = {
+                    navController.navigate(Screen.AdminDashboard.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 }
             )
@@ -181,11 +188,13 @@ fun NavGraph(
                 onNavigateToLeaderboard = {
                     navController.navigate(Screen.Leaderboard.route)
                 },
-                onNavigateToSettings = {
-                    navController.navigate(Screen.Settings.route)
-                },
                 onNavigateToNotes = {
                     navController.navigate(Screen.Notes.route)
+                },
+                onLogout = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(0) // Clear entire back stack
+                    }
                 }
             )
         }
@@ -236,21 +245,10 @@ fun NavGraph(
                 onNavigateToUserLogin = {
                     navController.navigate(Screen.Login.route)
                 },
-                onNavigateToUserManagement = {
-                    navController.navigate(Screen.UserManagement.route)
-                },
                 onLogout = {
                     navController.navigate(Screen.Welcome.route) {
                         popUpTo(0) // Clear entire back stack
                     }
-                }
-            )
-        }
-
-        composable(Screen.UserManagement.route) {
-            UserManagementScreen(
-                onNavigateBack = {
-                    navController.navigateUp()
                 }
             )
         }

@@ -33,5 +33,6 @@ class ArticleRepository(
     suspend fun updateArticle(article: Article) = articleDao.updateArticle(article)
 
     suspend fun deleteArticle(article: Article) = articleDao.deleteArticle(article)
-}
 
+    suspend fun deleteArticleById(articleId: Int) = articleDao.deleteArticleById(articleId)
+}

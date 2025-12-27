@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 data class AdminUiState(
     val articles: List<Article> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val successMessage: String? = null
 )
 
 class AdminViewModel(
@@ -30,7 +31,7 @@ class AdminViewModel(
 
     private fun loadArticles() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
             try {
                 articleRepository.getAllArticles().collectLatest { articles ->
                     _uiState.value = _uiState.value.copy(
@@ -41,7 +42,7 @@ class AdminViewModel(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Failed to load articles: ${e.message}"
+                    errorMessage = "Gagal memuat artikel: ${e.message}"
                 )
             }
         }
@@ -50,20 +51,10 @@ class AdminViewModel(
     fun deleteArticle(articleId: Int) {
         viewModelScope.launch {
             try {
-                // Get article first, then delete it
-                val article = articleRepository.getArticleById(articleId)
-                if (article != null) {
-                    articleRepository.deleteArticle(article)
-                    // Reload articles after deletion
-                    loadArticles()
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "Article not found"
-                    )
-                }
+                articleRepository.deleteArticleById(articleId)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "Failed to delete article: ${e.message}"
+                    errorMessage = "Gagal menghapus artikel: ${e.message}"
                 )
             }
         }

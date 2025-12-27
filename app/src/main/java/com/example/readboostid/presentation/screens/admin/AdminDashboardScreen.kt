@@ -29,7 +29,6 @@ import com.readboost.id.presentation.viewmodel.ViewModelFactory
 fun AdminDashboardScreen(
     onNavigateToArticleManagement: () -> Unit,
     onNavigateToUserLogin: () -> Unit,
-    onNavigateToUserManagement: () -> Unit,
     onLogout: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -166,8 +165,7 @@ fun AdminDashboardScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 ActionButtonsSection(
                     onNavigateToUserLogin = onNavigateToUserLogin,
-                    onNavigateToAdminPanel = onNavigateToArticleManagement,
-                    onNavigateToUserManagement = onNavigateToUserManagement
+                    onNavigateToAdminPanel = onNavigateToArticleManagement
                 )
             }
 
@@ -365,8 +363,7 @@ fun GenreStatCard(genre: String, count: Int) {
 @Composable
 fun ActionButtonsSection(
     onNavigateToUserLogin: () -> Unit,
-    onNavigateToAdminPanel: () -> Unit,
-    onNavigateToUserManagement: () -> Unit
+    onNavigateToAdminPanel: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -437,35 +434,6 @@ fun ActionButtonsSection(
                 }
             }
         }
-
-        // Second row - Manage User XP
-        Button(
-            onClick = onNavigateToUserManagement,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF4CAF50) // Green color for user management
-            )
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AdminPanelSettings,
-                    contentDescription = "User Management",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Kelola XP User",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
     }
 }
 
@@ -477,7 +445,6 @@ fun AdminDashboardScreenPreview() {
         AdminDashboardScreen(
             onNavigateToArticleManagement = {},
             onNavigateToUserLogin = {},
-            onNavigateToUserManagement = {},
             onLogout = {}
         )
     }

@@ -101,7 +101,7 @@ fun AddArticleScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Add New Article",
+                        text = "Tambah Artikel Baru",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -110,7 +110,7 @@ fun AddArticleScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Kembali"
                         )
                     }
                 }
@@ -136,7 +136,7 @@ fun AddArticleScreen(
                     onDifficultyChange = addArticleViewModel::onDifficultyChange,
                     onDurationChange = addArticleViewModel::onDurationChange,
                     onImageUrlChange = addArticleViewModel::onImageUrlChange,
-                        onAddArticleClick = { showAddDialog = true }
+                    onAddArticleClick = { showAddDialog = true }
                 )
             }
 
@@ -172,7 +172,7 @@ fun AddArticleScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Success",
+                                contentDescription = "Sukses",
                                 tint = Color(0xFF4CAF50),
                                 modifier = Modifier.size(48.dp)
                             )
@@ -185,7 +185,7 @@ fun AddArticleScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Kembali ke Admin Panel...",
+                                text = "Kembali ke Panel Admin...",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Gray
                             )
@@ -209,7 +209,7 @@ fun AddArticleForm(
     onImageUrlChange: (String) -> Unit,
     onAddArticleClick: () -> Unit
 ) {
-    val categories = listOf("Teknologi", "Sains", "Bisnis", "Seni", "Ilmiah", "Fantasi", "Sosial & Budaya", "Motivasi", "Sejarah", "Psikologi")
+    val categories = listOf("Teknologi", "Sains", "Psikologi", "Sejarah", "Motivasi", "Sosial Budaya")
     val difficulties = listOf("Dasar", "Menengah", "Lanjut")
 
     Column(

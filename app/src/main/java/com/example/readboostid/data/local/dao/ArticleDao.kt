@@ -30,7 +30,9 @@ interface ArticleDao {
     @Delete
     suspend fun deleteArticle(article: Article)
 
+    @Query("DELETE FROM articles WHERE id = :articleId")
+    suspend fun deleteArticleById(articleId: Int)
+
     @Query("DELETE FROM articles")
     suspend fun deleteAllArticles()
 }
-

@@ -95,6 +95,7 @@ fun HomeScreen(
                 Button(
                     onClick = {
                         showLogoutDialog = false
+                        app?.appContainer?.userPreferences?.logout()
                         onLogout() // Execute the logout action
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
@@ -143,49 +144,38 @@ fun HomeScreen(
                 // Header Section
                 item {
                     HeaderSection(
-                        searchQuery = "",
-                        onSearchQueryChange = { },
+                        searchQuery = uiState.searchQuery,
+                        onSearchQueryChange = homeViewModel::onSearchQueryChange,
                         userName = currentUserName,
                         isLoggedIn = isLoggedIn,
                         onLogout = { showLogoutDialog = true } // Show dialog on click
                     )
                 }
 
-                // New Collection Section
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    NewCollectionSection(
-                        articles = uiState.newCollectionArticles,
-                        onArticleClick = onNavigateToArticle,
-                        onNavigateToArticleList = onNavigateToArticleList
-                    )
-                }
-
-                // Category Row
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    CategoryRow(
-                        selectedCategory = uiState.selectedCategory,
-                        onCategorySelected = { category ->
-                            homeViewModel.filterByCategory(category)
-                        }
-                    )
+                // Tampilkan NewCollectionSection hanya jika tidak ada pencarian
+                if (uiState.searchQuery.isBlank()) {
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        NewCollectionSection(
+                            articles = uiState.newCollectionArticles,
+                            onArticleClick = onNavigateToArticle,
+                            onNavigateToArticleList = onNavigateToArticleList
+                        )
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        CategoryRow(
+                            selectedCategory = uiState.selectedCategory,
+                            onCategorySelected = homeViewModel::filterByCategory
+                        )
+                    }
                 }
 
                 // Article List
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
-                    // Debug: Tampilkan jumlah artikel
-                    if (uiState.filteredArticles.isEmpty() && uiState.allArticles.isNotEmpty()) {
-                        Text(
-                            text = "Debug: Total artikel: ${uiState.allArticles.size}, Filtered: ${uiState.filteredArticles.size}, Category: ${uiState.selectedCategory}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
                     ArticleList(
-                        articles = uiState.filteredArticles.take(5), // Limit to maximum 5 articles per category
+                        articles = uiState.filteredArticles,
                         onArticleClick = onNavigateToArticle
                     )
                 }
@@ -198,6 +188,7 @@ fun HomeScreen(
         }
     }
 }
+
 
 @Composable
 fun HeaderSection(
@@ -235,7 +226,7 @@ fun HeaderSection(
                 // Logo icon
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = "ReadBoost Logo",
+                    contentDescription = "Logo ReadBoost",
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
@@ -290,7 +281,7 @@ fun HeaderSection(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data("https://picsum.photos/seed/readboost/800/300")
+                        .data("https://firebasestorage.googleapis.com/v0/b/readboost-9999.appspot.com/o/readboost_banner.png?alt=media&token=12345678-1234-1234-1234-1234567890ab")
                         .crossfade(true)
                         .build(),
                     contentDescription = "ReadBoost Banner",
@@ -339,14 +330,14 @@ fun SearchBar(
         modifier = Modifier.fillMaxWidth(),
         placeholder = {
             Text(
-                text = "What would you like to read?",
+                text = "Apa yang ingin Anda baca?",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Search",
+                contentDescription = "Cari",
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         },
@@ -384,7 +375,7 @@ fun NewCollectionSection(
                 color = MaterialTheme.colorScheme.onSurface
             )
             TextButton(onClick = onNavigateToArticleList) {
-                Text("lihat semua")
+                Text("Lihat Semua")
             }
         }
 
@@ -483,7 +474,7 @@ fun CategoryRow(
     selectedCategory: String,
     onCategorySelected: (String) -> Unit
 ) {
-    val categories = listOf("Populer", "Ilmiah", "Fantasi", "Bisnis", "Teknologi", "Seni")
+    val categories = listOf("Populer", "Teknologi", "Sains", "Psikologi", "Sejarah", "Motivasi", "Sosial Budaya")
 
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
@@ -542,9 +533,10 @@ fun ArticleList(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Tidak ada artikel tersedia",
+                    text = "Tidak ada artikel yang cocok dengan pencarian Anda.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center
                 )
             }
         } else {
@@ -640,7 +632,7 @@ fun ArticleListItem(
             // Arrow icon
             Icon(
                 imageVector = Icons.Default.ChevronRight,
-                contentDescription = "Open article",
+                contentDescription = "Buka Artikel",
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -738,10 +730,10 @@ fun BottomNavigationBar(
             icon = {
                 Icon(
                     imageVector = Icons.Default.Home,
-                    contentDescription = "Home"
+                    contentDescription = "Beranda"
                 )
             },
-            label = { Text("Home") }
+            label = { Text("Beranda") }
         )
         NavigationBarItem(
             selected = selectedRoute == "article",
@@ -771,10 +763,10 @@ fun BottomNavigationBar(
             icon = {
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = "Profile"
+                    contentDescription = "Profil"
                 )
             },
-            label = { Text("Profile") }
+            label = { Text("Profil") }
         )
     }
 }

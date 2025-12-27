@@ -39,7 +39,7 @@ fun ArticleListScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    val categories = listOf("All", "Teknologi", "Sains", "Psikologi", "Sejarah", "Motivasi", "Sosial & Budaya")
+    val categories = listOf("All", "Teknologi", "Sains", "Psikologi", "Sejarah", "Motivasi", "Sosial Budaya")
 
     Scaffold(
         topBar = {
@@ -47,7 +47,7 @@ fun ArticleListScreen(
                 title = { Text("Semua Artikel") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
                     }
                 }
             )
@@ -111,7 +111,7 @@ fun ArticleListScreen(
     showBackground = true,
     device = Devices.PIXEL_4,
     showSystemUi = true,
-    name = "Article List Screen - Full"
+    name = "Layar Daftar Artikel - Penuh"
 )
 @Composable
 fun ArticleListScreenPreview() {
@@ -122,7 +122,7 @@ fun ArticleListScreenPreview() {
                     title = { Text("Semua Artikel") },
                     navigationIcon = {
                         IconButton(onClick = {}) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
                         }
                     }
                 )
@@ -146,7 +146,7 @@ fun ArticleListScreenPreview() {
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(listOf("All", "Teknologi", "Sains", "Psikologi", "Sejarah", "Motivasi", "Sosial & Budaya")) { category ->
+                    items(listOf("All", "Teknologi", "Sains", "Psikologi", "Sejarah", "Motivasi", "Sosial Budaya")) { category ->
                         FilterChip(
                             selected = category == "All",
                             onClick = {},

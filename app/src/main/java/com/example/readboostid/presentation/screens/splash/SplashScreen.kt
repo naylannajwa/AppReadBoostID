@@ -21,40 +21,35 @@ import kotlinx.coroutines.launch
 import android.util.Log
 
 @Composable
-fun SplashScreen(onNavigateToLogin: () -> Unit) {
+fun SplashScreen(
+    onNavigateToWelcome: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToAdmin: () -> Unit
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        try {
-            // Initialize dummy data in background - force regenerate for updated data
-            coroutineScope.launch {
-                try {
-                    val app = context.applicationContext as? ReadBoostApplication
-                    if (app != null) {
-                        // Force regenerate dummy data to ensure latest names are used
-                        DummyDataGenerator.forceRegenerateDummyData()
-                        Log.d("SplashScreen", "Dummy data force regeneration completed with updated names")
-                    }
-                } catch (e: Exception) {
-                    Log.e("SplashScreen", "Failed to regenerate dummy data", e)
-                    // Fallback to normal initialization
-                    try {
-                        DummyDataGenerator.initializeDummyDataIfNeeded()
-                        Log.d("SplashScreen", "Fallback to normal dummy data initialization")
-                    } catch (fallbackException: Exception) {
-                        Log.e("SplashScreen", "Fallback initialization also failed", fallbackException)
-                    }
-                }
-            }
+        coroutineScope.launch {
+            try {
+                val app = context.applicationContext as ReadBoostApplication
+                // Initialize dummy data in background
+                DummyDataGenerator.initializeDummyDataIfNeeded()
 
-            delay(2000)
-            onNavigateToLogin()
-        } catch (e: Exception) {
-            // If navigation fails, show error
-            Log.e("SplashScreen", "Navigation failed", e)
-            // Still try to navigate even if dummy data fails
-            onNavigateToLogin()
+                // Check login status
+                val currentUser = app.appContainer.userPreferences.getCurrentUser()
+
+                delay(1500)
+
+                when (currentUser?.role) {
+                    "admin", "superadmin" -> onNavigateToAdmin()
+                    "user" -> onNavigateToHome()
+                    else -> onNavigateToWelcome()
+                }
+            } catch (e: Exception) {
+                Log.e("SplashScreen", "Error during splash screen startup", e)
+                onNavigateToWelcome() // Fallback to welcome screen
+            }
         }
     }
 
@@ -99,6 +94,10 @@ fun SplashScreen(onNavigateToLogin: () -> Unit) {
 @Composable
 fun SplashScreenPreview() {
     ReadBoostTheme {
-        SplashScreen(onNavigateToLogin = {})
+        SplashScreen(
+            onNavigateToWelcome = {},
+            onNavigateToHome = {},
+            onNavigateToAdmin = {}
+        )
     }
 }

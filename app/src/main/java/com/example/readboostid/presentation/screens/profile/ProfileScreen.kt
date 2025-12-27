@@ -1,6 +1,8 @@
 // File: presentation/screens/profile/ProfileScreen.kt (UPDATED)
 package com.readboost.id.presentation.screens.profile
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
@@ -36,22 +39,48 @@ fun ProfileScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToArticleList: () -> Unit,
     onNavigateToLeaderboard: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToNotes: () -> Unit
+    onNavigateToNotes: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as ReadBoostApplication
     val viewModel: ProfileViewModel = viewModel(
         factory = ViewModelFactory(app.appContainer)
     )
+    val uriHandler = LocalUriHandler.current
 
     val uiState by viewModel.uiState.collectAsState()
     var showTargetDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Refresh data when screen becomes visible (e.g., after reading article)
     LaunchedEffect(Unit) {
         println("ProfileScreen: Screen became visible, refreshing data")
         viewModel.refreshData()
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text(text = "Konfirmasi Logout") },
+            text = { Text("Apakah Anda yakin ingin logout dari akun Anda?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout() // Execute the logout action
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                ) {
+                    Text("Logout", color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showLogoutDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -60,15 +89,15 @@ fun ProfileScreen(
                 title = { Text("Profil & Statistik") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.forceRefreshData() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh Data")
+                        Icon(Icons.Default.Refresh, contentDescription = "Segarkan Data")
                     }
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    IconButton(onClick = { showLogoutDialog = true }) {
+                        Icon(Icons.Default.Logout, contentDescription = "Logout")
                     }
                 }
             )
@@ -115,7 +144,9 @@ fun ProfileScreen(
                     QuickActionsSection(
                         onEditTarget = { showTargetDialog = true },
                         onNavigateToNotes = onNavigateToNotes,
-                        onNavigateToAbout = {}
+                        onNavigateToAbout = {
+                            uriHandler.openUri("https://heylink.me/ReadBoostID/")
+                        }
                     )
                 }
             }
@@ -211,7 +242,7 @@ fun StatisticsSection(userProgress: UserProgress?) {
         // Streak Statistic
         StatisticRowItem(
             icon = Icons.Default.LocalFireDepartment,
-            title = "Streak Hari",
+            title = "Streak",
             value = "${userProgress?.streakDays ?: 0}",
             color = Color(0xFFFF5722), // Orange
             description = "Hari berturut-turut"
@@ -474,7 +505,7 @@ fun TargetDialog(
     showBackground = true,
     device = Devices.PIXEL_4,
     showSystemUi = true,
-    name = "Profile Screen - Full"
+    name = "Layar Profil - Penuh"
 )
 @Composable
 fun ProfileScreenPreview() {
@@ -485,12 +516,12 @@ fun ProfileScreenPreview() {
                     title = { Text("Profil & Statistik") },
                     navigationIcon = {
                         IconButton(onClick = {}) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
                         }
                     },
                     actions = {
                         IconButton(onClick = {}) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+                            Icon(Icons.Default.Logout, contentDescription = "Logout")
                         }
                     }
                 )
