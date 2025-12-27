@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.readboost.id"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.readboost.id"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -83,6 +83,7 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     implementation(libs.volley)
     implementation(libs.firebase.firestore)
+    implementation(libs.androidx.compose.foundation)
     ksp("androidx.room:room-compiler:2.6.1")
 
     // === Retrofit + OkHttp ===
