@@ -57,8 +57,19 @@ fun LeaderboardScreen(
 
     // Refresh data when screen becomes visible
     LaunchedEffect(Unit) {
-        println("LeaderboardScreen: Screen became visible, force refreshing leaderboard")
-        viewModel.forceRefreshLeaderboard()
+        println("LeaderboardScreen: Screen became visible, loading leaderboard")
+        viewModel.loadLeaderboard()
+    }
+
+    // Log current data for debugging
+    LaunchedEffect(uiState.leaderboard.size) {
+        println("LeaderboardScreen: UI updated - ${uiState.leaderboard.size} entries displayed")
+        if (uiState.leaderboard.isNotEmpty()) {
+            println("LeaderboardScreen: Top 3 entries:")
+            uiState.leaderboard.take(3).forEach { entry ->
+                println("  - ${entry.username}: ${entry.totalXP} XP (Rank ${entry.rank})")
+            }
+        }
     }
 
     // Background gradient
@@ -112,7 +123,7 @@ fun LeaderboardScreen(
                 ) {
                     // Welcome section with trophy
                     item {
-                        LeaderboardWelcomeSection()
+                        LeaderboardWelcomeSection(selectedFilter = uiState.selectedFilter)
                         Spacer(modifier = Modifier.height(20.dp))
                     }
 
@@ -532,7 +543,12 @@ fun getAvatarColor(username: String): Color {
 // New Components for Enhanced Leaderboard
 
 @Composable
-fun LeaderboardWelcomeSection() {
+fun LeaderboardWelcomeSection(selectedFilter: TimeFilter = TimeFilter.Weekly) {
+    val subtitleText = when (selectedFilter) {
+        TimeFilter.Weekly -> "Top readers this week"
+        TimeFilter.AllTime -> "Top readers all time"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -572,7 +588,7 @@ fun LeaderboardWelcomeSection() {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Top readers this week",
+            text = subtitleText,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
@@ -828,7 +844,7 @@ fun LeaderboardScreenPreview() {
                 ) {
                     // Welcome section
                     item {
-                        LeaderboardWelcomeSection()
+                        LeaderboardWelcomeSection(selectedFilter = TimeFilter.Weekly)
                         Spacer(modifier = Modifier.height(20.dp))
                     }
 

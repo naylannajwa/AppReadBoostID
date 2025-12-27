@@ -19,17 +19,36 @@ class FirestoreLeaderboardService(
         private const val LEADERBOARD_COLLECTION = "leaderboard"
         private const val USER_PROGRESS_COLLECTION = "user_progress"
         private const val READING_SESSIONS_COLLECTION = "reading_sessions"
+
+        // Get current week key (format: YYYY_WW, e.g., "2024_01")
+        private fun getCurrentWeekKey(): String {
+            val calendar = java.util.Calendar.getInstance()
+            calendar.timeInMillis = System.currentTimeMillis()
+            val year = calendar.get(java.util.Calendar.YEAR)
+            val week = calendar.get(java.util.Calendar.WEEK_OF_YEAR)
+            return String.format("%04d_%02d", year, week)
+        }
+
+        // Get last week key
+        private fun getLastWeekKey(): String {
+            val calendar = java.util.Calendar.getInstance()
+            calendar.timeInMillis = System.currentTimeMillis()
+            calendar.add(java.util.Calendar.WEEK_OF_YEAR, -1)
+            val year = calendar.get(java.util.Calendar.YEAR)
+            val week = calendar.get(java.util.Calendar.WEEK_OF_YEAR)
+            return String.format("%04d_%02d", year, week)
+        }
     }
 
     // Leaderboard Operations
-    suspend fun getLeaderboard(limit: Int = 50): List<Leaderboard> {
+    suspend fun getLeaderboard(limit: Int = 10): List<Leaderboard> {
         return getAllTimeLeaderboard(limit)
     }
 
-    suspend fun getAllTimeLeaderboard(limit: Int = 50): List<Leaderboard> {
+    suspend fun getAllTimeLeaderboard(limit: Int = 10): List<Leaderboard> {
         return try {
             println("FirestoreLeaderboardService: Getting all-time leaderboard")
-            val snapshot = firestore.collection(LEADERBOARD_COLLECTION)
+            val snapshot = firestore.collection("leaderboard_alltime")
                 .orderBy("totalXP", Query.Direction.DESCENDING)
                 .limit(limit.toLong())
                 .get()
@@ -41,7 +60,7 @@ class FirestoreLeaderboardService(
                 val totalXP = document.getLong("totalXP")?.toInt() ?: 0
                 val rank = index + 1
 
-                println("FirestoreLeaderboardService: All-time - $username: $totalXP XP (Rank: $rank)")
+                println("FirestoreLeaderboardService: All-time #${rank} - $username: ${totalXP} XP")
                 Leaderboard(
                     userId = userId.hashCode(),
                     username = username,
@@ -49,48 +68,225 @@ class FirestoreLeaderboardService(
                     rank = rank
                 )
             }
+
+            // If all-time has no data, fallback to dummy data
+            if (leaderboard.isEmpty()) {
+                println("FirestoreLeaderboardService: No all-time data found, falling back to dummy data")
+                return getDummyAllTimeLeaderboard(limit)
+            }
+
             leaderboard
         } catch (e: Exception) {
             println("FirestoreLeaderboardService: Error getting all-time leaderboard: ${e.message}")
+            // Fallback to dummy data
+            getDummyAllTimeLeaderboard(limit)
+        }
+    }
+
+    private suspend fun getDummyAllTimeLeaderboard(limit: Int = 10): List<Leaderboard> {
+        return try {
+            // Try to get data from the old collection first (might contain real users)
+            val oldSnapshot = firestore.collection(LEADERBOARD_COLLECTION)
+                .orderBy("totalXP", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+
+            if (oldSnapshot.documents.isNotEmpty()) {
+                val leaderboard = oldSnapshot.documents.mapIndexed { index, document ->
+                    val userId = document.getString("userId") ?: "unknown"
+                    val username = document.getString("username") ?: "Unknown"
+                    val totalXP = document.getLong("totalXP")?.toInt() ?: 0
+
+                    Leaderboard(
+                        userId = userId.hashCode(),
+                        username = username,
+                        totalXP = totalXP,
+                        rank = index + 1
+                    )
+                }
+                return leaderboard
+            }
+
+            // If old collection is empty, get static dummy data
+            val dummySnapshot = firestore.collection("leaderboard_alltime")
+                .orderBy("totalXP", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+
+            dummySnapshot.documents.mapIndexed { index, document ->
+                val userId = document.getString("userId") ?: "unknown"
+                val username = document.getString("username") ?: "Unknown"
+                val totalXP = document.getLong("totalXP")?.toInt() ?: 0
+
+                Leaderboard(
+                    userId = userId.hashCode(),
+                    username = username,
+                    totalXP = totalXP,
+                    rank = index + 1
+                )
+            }
+        } catch (e: Exception) {
+            println("FirestoreLeaderboardService: Error getting dummy all-time leaderboard: ${e.message}")
             emptyList()
         }
     }
 
-    suspend fun getWeeklyLeaderboard(limit: Int = 50): List<Leaderboard> {
+    suspend fun getWeeklyLeaderboard(limit: Int = 10): List<Leaderboard> {
         return try {
             println("FirestoreLeaderboardService: Getting weekly leaderboard")
-            // For now, return same as all-time since we don't have weekly data structure yet
-            // In production, you would filter by last week's data
-            val allTimeData = getAllTimeLeaderboard(limit)
+            val currentWeekKey = getCurrentWeekKey()
+            val weeklyCollection = "leaderboard_weekly_$currentWeekKey"
 
-            // Simulate weekly by taking top users (in real app, filter by timestamp)
-            allTimeData.take(limit).mapIndexed { index, entry ->
-                entry.copy(rank = index + 1)
+            println("FirestoreLeaderboardService: Using collection '$weeklyCollection' for current week")
+
+            // Get current week data
+            val snapshot = firestore.collection(weeklyCollection)
+                .orderBy("totalXP", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+
+            val leaderboard = snapshot.documents.mapIndexed { index, document ->
+                val userId = document.getString("userId") ?: "unknown"
+                val username = document.getString("username") ?: "Unknown"
+                val totalXP = document.getLong("totalXP")?.toInt() ?: 0
+                val rank = index + 1
+
+                println("FirestoreLeaderboardService: Weekly #${rank} - $username: ${totalXP} XP (Week: $currentWeekKey)")
+                Leaderboard(
+                    userId = userId.hashCode(),
+                    username = username,
+                    totalXP = totalXP,
+                    rank = rank
+                )
             }
+
+            // If current week has no data, try to show last week data or fallback to dummy
+            if (leaderboard.isEmpty()) {
+                println("FirestoreLeaderboardService: No data for current week, trying last week...")
+                val lastWeekKey = getLastWeekKey()
+                val lastWeekCollection = "leaderboard_weekly_$lastWeekKey"
+
+                val lastWeekSnapshot = firestore.collection(lastWeekCollection)
+                    .orderBy("totalXP", Query.Direction.DESCENDING)
+                    .limit(limit.toLong())
+                    .get()
+                    .await()
+
+                val lastWeekLeaderboard = lastWeekSnapshot.documents.mapIndexed { index, document ->
+                    val userId = document.getString("userId") ?: "unknown"
+                    val username = document.getString("username") ?: "Unknown"
+                    val totalXP = document.getLong("totalXP")?.toInt() ?: 0
+                    val rank = index + 1
+
+                    println("FirestoreLeaderboardService: Last Week #${rank} - $username: ${totalXP} XP (Week: $lastWeekKey)")
+                    Leaderboard(
+                        userId = userId.hashCode(),
+                        username = username,
+                        totalXP = totalXP,
+                        rank = rank
+                    )
+                }
+
+                if (lastWeekLeaderboard.isNotEmpty()) {
+                    return lastWeekLeaderboard
+                }
+
+                // Fallback to dummy data if no weekly data exists
+                println("FirestoreLeaderboardService: No weekly data found, falling back to dummy data")
+                return getDummyWeeklyLeaderboard(limit)
+            }
+
+            leaderboard
         } catch (e: Exception) {
             println("FirestoreLeaderboardService: Error getting weekly leaderboard: ${e.message}")
+            // Fallback to dummy data
+            getDummyWeeklyLeaderboard(limit)
+        }
+    }
+
+    private suspend fun getDummyWeeklyLeaderboard(limit: Int = 10): List<Leaderboard> {
+        return try {
+            // Get dummy data from the static weekly collection
+            val snapshot = firestore.collection("leaderboard_weekly")
+                .orderBy("totalXP", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+
+            snapshot.documents.mapIndexed { index, document ->
+                val userId = document.getString("userId") ?: "unknown"
+                val username = document.getString("username") ?: "Unknown"
+                val totalXP = document.getLong("totalXP")?.toInt() ?: 0
+
+                Leaderboard(
+                    userId = userId.hashCode(),
+                    username = username,
+                    totalXP = totalXP,
+                    rank = index + 1
+                )
+            }
+        } catch (e: Exception) {
+            println("FirestoreLeaderboardService: Error getting dummy weekly leaderboard: ${e.message}")
             emptyList()
         }
     }
 
     suspend fun updateUserXP(userId: String, username: String, xpToAdd: Int) {
         try {
-            val userDocRef = firestore.collection(LEADERBOARD_COLLECTION).document(userId)
-
+            // Update ALL-TIME leaderboard
+            val allTimeDocRef = firestore.collection("leaderboard_alltime").document(userId)
             firestore.runTransaction { transaction ->
-                val snapshot = transaction.get(userDocRef)
+                val snapshot = transaction.get(allTimeDocRef)
                 val currentXP = snapshot.getLong("totalXP")?.toInt() ?: 0
                 val newXP = currentXP + xpToAdd
 
-                transaction.set(userDocRef, mapOf(
+                transaction.set(allTimeDocRef, mapOf(
                     "userId" to userId,
                     "username" to username,
                     "totalXP" to newXP,
                     "lastUpdated" to System.currentTimeMillis()
                 ))
             }.await()
+
+            // Update WEEKLY leaderboard (per week collection)
+            val currentWeekKey = getCurrentWeekKey()
+            val weeklyDocRef = firestore.collection("leaderboard_weekly_$currentWeekKey").document(userId)
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(weeklyDocRef)
+                val currentXP = snapshot.getLong("totalXP")?.toInt() ?: 0
+                val newXP = currentXP + xpToAdd
+
+                transaction.set(weeklyDocRef, mapOf(
+                    "userId" to userId,
+                    "username" to username,
+                    "totalXP" to newXP,
+                    "weekKey" to currentWeekKey,
+                    "lastUpdated" to System.currentTimeMillis()
+                ))
+            }.await()
+
+            // Also update the old leaderboard collection for backward compatibility
+            val oldDocRef = firestore.collection(LEADERBOARD_COLLECTION).document(userId)
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(oldDocRef)
+                val currentXP = snapshot.getLong("totalXP")?.toInt() ?: 0
+                val newXP = currentXP + xpToAdd
+
+                transaction.set(oldDocRef, mapOf(
+                    "userId" to userId,
+                    "username" to username,
+                    "totalXP" to newXP,
+                    "lastUpdated" to System.currentTimeMillis()
+                ))
+            }.await()
+
+            println("FirestoreLeaderboardService: Updated XP for user $username ($userId): +$xpToAdd XP (Week: $currentWeekKey)")
         } catch (e: Exception) {
-            // Handle error
+            println("FirestoreLeaderboardService: Error updating user XP: ${e.message}")
+            e.printStackTrace()
         }
     }
 

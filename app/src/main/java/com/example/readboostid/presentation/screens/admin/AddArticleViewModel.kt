@@ -69,9 +69,14 @@ class AddArticleViewModel(
     }
 
     fun onDurationChange(duration: String) {
+        val durationInt = duration.toIntOrNull()
+        val calculatedXP = if (durationInt != null && durationInt > 0) durationInt * 100 else 0
+
         _uiState.value = _uiState.value.copy(
             duration = duration,
+            xp = calculatedXP.toString(),
             durationError = null,
+            xpError = null,
             errorMessage = null
         )
     }
@@ -132,14 +137,7 @@ class AddArticleViewModel(
             hasError = true
         }
 
-        val xpInt = currentState.xp.toIntOrNull()
-        if (currentState.xp.isBlank()) {
-            xpError = "XP tidak boleh kosong"
-            hasError = true
-        } else if (xpInt == null || xpInt <= 0) {
-            xpError = "XP harus berupa angka positif"
-            hasError = true
-        }
+        // XP is calculated automatically, no validation needed
 
         if (hasError) {
             _uiState.value = currentState.copy(
@@ -147,8 +145,7 @@ class AddArticleViewModel(
                 contentError = contentError,
                 categoryError = categoryError,
                 difficultyError = difficultyError,
-                durationError = durationError,
-                xpError = xpError
+                durationError = durationError
             )
             return
         }
@@ -161,13 +158,14 @@ class AddArticleViewModel(
 
         viewModelScope.launch {
             try {
+                val xpInt = currentState.xp.toIntOrNull() ?: 0
                 val article = Article(
                     title = currentState.title,
                     content = currentState.content,
                     category = currentState.category,
                     difficulty = currentState.difficulty,
                     duration = durationInt!!,
-                    xp = xpInt!!,
+                    xp = xpInt,
                     imageUrl = currentState.imageUrl.takeIf { it.isNotBlank() }
                 )
 

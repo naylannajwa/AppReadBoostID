@@ -43,11 +43,36 @@ class LeaderboardViewModel(
                 println("LeaderboardViewModel: Loading leaderboard from Firestore...")
 
                 // Load both weekly and all-time data
-                val allTimeData = firestoreRepository.getAllTimeLeaderboard(50)
-                val weeklyData = firestoreRepository.getWeeklyLeaderboard(50)
+                val allTimeData = firestoreRepository.getAllTimeLeaderboard(10)
+                val weeklyData = firestoreRepository.getWeeklyLeaderboard(10)
 
                 println("LeaderboardViewModel: Loaded ${allTimeData.size} all-time entries")
                 println("LeaderboardViewModel: Loaded ${weeklyData.size} weekly entries")
+
+                // If no data found, try to generate dummy data
+                if (allTimeData.isEmpty() || weeklyData.isEmpty()) {
+                    println("LeaderboardViewModel: No leaderboard data found, generating dummy data...")
+                    try {
+                        com.readboost.id.data.service.DummyDataGenerator.generateDummyLeaderboardData()
+                        // Reload data after generation
+                        val newAllTimeData = firestoreRepository.getAllTimeLeaderboard(50)
+                        val newWeeklyData = firestoreRepository.getWeeklyLeaderboard(50)
+                        println("LeaderboardViewModel: After generation - ${newAllTimeData.size} all-time, ${newWeeklyData.size} weekly entries")
+
+                        // Update with new data
+                        _uiState.update {
+                            it.copy(
+                                leaderboard = if (it.selectedFilter == TimeFilter.Weekly) newWeeklyData else newAllTimeData,
+                                weeklyLeaderboard = newWeeklyData,
+                                allTimeLeaderboard = newAllTimeData,
+                                isLoading = false
+                            )
+                        }
+                        return@launch
+                    } catch (e: Exception) {
+                        println("LeaderboardViewModel: Failed to generate dummy data: ${e.message}")
+                    }
+                }
 
                 allTimeData.forEach { entry ->
                     println("LeaderboardViewModel: All-time - ${entry.username}: ${entry.totalXP} XP (Rank: ${entry.rank})")
@@ -139,6 +164,6 @@ class LeaderboardViewModel(
 
     fun forceRefreshLeaderboard() {
         println("LeaderboardViewModel: Force refresh leaderboard requested")
-        loadLeaderboard()
+        refreshWithDummyData() // Force regenerate dummy data first
     }
 }

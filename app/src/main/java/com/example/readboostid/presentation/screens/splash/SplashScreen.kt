@@ -27,17 +27,24 @@ fun SplashScreen(onNavigateToLogin: () -> Unit) {
 
     LaunchedEffect(Unit) {
         try {
-            // Initialize dummy data in background (but don't force regenerate)
+            // Initialize dummy data in background - force regenerate for updated data
             coroutineScope.launch {
                 try {
                     val app = context.applicationContext as? ReadBoostApplication
                     if (app != null) {
-                        // Just initialize dummy data if needed, don't force regenerate
-                        DummyDataGenerator.initializeDummyDataIfNeeded()
-                        Log.d("SplashScreen", "Dummy data initialization completed")
+                        // Force regenerate dummy data to ensure latest names are used
+                        DummyDataGenerator.forceRegenerateDummyData()
+                        Log.d("SplashScreen", "Dummy data force regeneration completed with updated names")
                     }
                 } catch (e: Exception) {
-                    Log.e("SplashScreen", "Failed to initialize dummy data", e)
+                    Log.e("SplashScreen", "Failed to regenerate dummy data", e)
+                    // Fallback to normal initialization
+                    try {
+                        DummyDataGenerator.initializeDummyDataIfNeeded()
+                        Log.d("SplashScreen", "Fallback to normal dummy data initialization")
+                    } catch (fallbackException: Exception) {
+                        Log.e("SplashScreen", "Fallback initialization also failed", fallbackException)
+                    }
                 }
             }
 

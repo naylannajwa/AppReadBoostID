@@ -135,7 +135,6 @@ fun AddArticleScreen(
                     onCategoryChange = addArticleViewModel::onCategoryChange,
                     onDifficultyChange = addArticleViewModel::onDifficultyChange,
                     onDurationChange = addArticleViewModel::onDurationChange,
-                    onXpChange = addArticleViewModel::onXpChange,
                     onImageUrlChange = addArticleViewModel::onImageUrlChange,
                         onAddArticleClick = { showAddDialog = true }
                 )
@@ -207,7 +206,6 @@ fun AddArticleForm(
     onCategoryChange: (String) -> Unit,
     onDifficultyChange: (String) -> Unit,
     onDurationChange: (String) -> Unit,
-    onXpChange: (String) -> Unit,
     onImageUrlChange: (String) -> Unit,
     onAddArticleClick: () -> Unit
 ) {
@@ -349,12 +347,13 @@ fun AddArticleForm(
 
             OutlinedTextField(
                 value = uiState.xp,
-                onValueChange = onXpChange,
+                onValueChange = {}, // Disabled - XP calculated automatically
                 modifier = Modifier.weight(1f),
-                label = { Text("XP") },
-                placeholder = { Text("15") },
+                label = { Text("XP (Otomatis)") },
+                placeholder = { Text("500") },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
+                enabled = false, // Make it read-only
                 isError = uiState.xpError != null
             )
         }

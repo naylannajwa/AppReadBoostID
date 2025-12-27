@@ -27,12 +27,14 @@ class ProfileViewModel(
     private fun loadUserProgress() {
         viewModelScope.launch {
             try {
+                println("ProfileViewModel: Loading user progress...")
                 // Get user progress through hybrid manager
                 val progress = hybridDataManager.getUserProgress()
                 _uiState.update { it.copy(userProgress = progress ?: UserProgress(), isLoading = false) }
-                println("ProfileViewModel: Loaded user progress - XP: ${progress?.totalXP}, Daily XP: ${progress?.dailyXPEarned}, Daily Minutes: ${progress?.dailyReadingMinutes}/${progress?.dailyTarget}, Streak: ${progress?.streakDays}")
+                println("ProfileViewModel: SUCCESS - Loaded user progress - XP: ${progress?.totalXP}, Daily XP: ${progress?.dailyXPEarned}, Daily Minutes: ${progress?.dailyReadingMinutes}/${progress?.dailyTarget}, Streak: ${progress?.streakDays}")
             } catch (e: Exception) {
-                println("ProfileViewModel: Error loading progress: ${e.message}")
+                println("ProfileViewModel: ERROR loading progress: ${e.message}")
+                e.printStackTrace()
                 // Provide default progress if loading fails
                 _uiState.update { it.copy(userProgress = UserProgress(), isLoading = false) }
             }

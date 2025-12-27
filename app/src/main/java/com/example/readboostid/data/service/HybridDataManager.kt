@@ -147,26 +147,28 @@ class HybridDataManager(
 
             println("HybridDataManager: Updated progress - Total XP: ${updatedProgress.totalXP}, Daily XP: ${updatedProgress.dailyXPEarned}, Daily Minutes: ${updatedProgress.dailyReadingMinutes}/${updatedProgress.dailyTarget}, Streak: ${updatedProgress.streakDays}")
 
-            if (isFirebaseUser) {
-                // Firebase user: Update Firestore
-                println("HybridDataManager: Updating Firebase user data in Firestore")
+            // Update Firestore for ALL users (both Firebase and Local) to enable leaderboard
+            println("HybridDataManager: Updating user data in Firestore (for leaderboard)")
+            try {
                 firestoreRepository.updateUserXP(userId, username, xpEarned)
                 firestoreRepository.saveUserProgress(userId, updatedProgress)
 
-                // Also update reading session
+                // Also update reading session for all users
                 try {
                     val sessionId = firestoreRepository.startReadingSession(userId, articleId)
                     firestoreRepository.endReadingSession(sessionId, xpEarned)
-                    println("HybridDataManager: Reading session completed for Firebase user - sessionId: $sessionId")
+                    println("HybridDataManager: Reading session completed - sessionId: $sessionId")
                 } catch (e: Exception) {
                     println("HybridDataManager: Failed to save reading session: ${e.message}")
                 }
-            } else {
-                // Local user: Update Room
-                println("HybridDataManager: Updating local user data in Room")
-                userDataRepository.completeReadingSession(xpEarned)
-                userDataRepository.updateUserProgress(updatedProgress)
+            } catch (e: Exception) {
+                println("HybridDataManager: Failed to update Firestore for leaderboard: ${e.message}")
             }
+
+            // Update Room database (for local offline access)
+            println("HybridDataManager: Updating local Room database")
+            userDataRepository.completeReadingSession(xpEarned)
+            userDataRepository.updateUserProgress(updatedProgress)
 
         } catch (e: Exception) {
             println("HybridDataManager: Error in onArticleCompleted: ${e.message}")
@@ -186,21 +188,25 @@ class HybridDataManager(
     suspend fun updateDailyTarget(newTarget: Int) {
         try {
             val userId = getCurrentUserId()
-            val isFirebaseUser = isFirebaseUser()
-            println("HybridDataManager: Updating daily target for $userId to $newTarget (Firebase: $isFirebaseUser)")
+            println("HybridDataManager: Updating daily target for $userId to $newTarget")
 
-            if (isFirebaseUser) {
-                // Firebase user: Update Firestore
+            // Update Firestore for all users (for leaderboard consistency)
+            try {
                 firestoreRepository.updateUserProgress(userId, mapOf("dailyTarget" to newTarget))
-            } else {
-                // Local user: Update Room
-                userDataRepository.updateDailyTarget(newTarget)
+                println("HybridDataManager: Updated target in Firestore")
+            } catch (e: Exception) {
+                println("HybridDataManager: Failed to update Firestore target: ${e.message}")
             }
+
+            // Also update Room for offline access
+            userDataRepository.updateDailyTarget(newTarget)
+            println("HybridDataManager: Updated target in Room")
         } catch (e: Exception) {
             println("HybridDataManager: Error updating daily target: ${e.message}")
             // Fallback ke Room
             try {
                 userDataRepository.updateDailyTarget(newTarget)
+                println("HybridDataManager: Fallback update in Room only")
             } catch (e2: Exception) {
                 println("HybridDataManager: Even Room fallback failed: ${e2.message}")
             }
@@ -216,42 +222,53 @@ class HybridDataManager(
             val isFirebaseUser = isFirebaseUser()
             println("HybridDataManager: Getting user progress for $userId (Firebase: $isFirebaseUser)")
 
-            if (isFirebaseUser) {
-                // Firebase user: Use Firestore as primary, Room as backup
-                val firestoreProgress = try {
-                    firestoreRepository.getUserProgress(userId)
-                } catch (e: Exception) {
-                    println("HybridDataManager: Firestore access failed: ${e.message}")
-                    null
-                }
+            // Try to get from Firestore first (for all users now)
+            val firestoreProgress = try {
+                firestoreRepository.getUserProgress(userId)
+            } catch (e: Exception) {
+                println("HybridDataManager: ERROR - Firestore access failed: ${e.message}")
+                e.printStackTrace()
+                null
+            }
 
                 if (firestoreProgress != null) {
-                    println("HybridDataManager: Firebase user - using Firestore data: XP: ${firestoreProgress.totalXP}, Daily XP: ${firestoreProgress.dailyXPEarned}, Daily Minutes: ${firestoreProgress.dailyReadingMinutes}/${firestoreProgress.dailyTarget}, Streak: ${firestoreProgress.streakDays}")
-                    firestoreProgress
-                } else {
-                    // Create default progress for new Firebase user
-                    val defaultProgress = UserProgress()
+                    println("HybridDataManager: SUCCESS - Using Firestore data: XP: ${firestoreProgress.totalXP}, Daily XP: ${firestoreProgress.dailyXPEarned}, Daily Minutes: ${firestoreProgress.dailyReadingMinutes}/${firestoreProgress.dailyTarget}, Streak: ${firestoreProgress.streakDays}")
+                    // Sync to Room for offline access
                     try {
-                        firestoreRepository.saveUserProgress(userId, defaultProgress)
-                        firestoreRepository.updateUserXP(userId, getCurrentUsername(), 0)
-                        println("HybridDataManager: Created default progress for new Firebase user")
+                        userDataRepository.updateUserProgress(firestoreProgress)
+                        println("HybridDataManager: Synced Firestore to Room successfully")
                     } catch (e: Exception) {
-                        println("HybridDataManager: Failed to save default progress: ${e.message}")
+                        println("HybridDataManager: Failed to sync to Room: ${e.message}")
                     }
-                    defaultProgress
-                }
+                    firestoreProgress
             } else {
-                // Local user: Use Room as primary, Firestore as backup
+                // Fallback to Room, then sync to Firestore
                 val roomProgress = userDataRepository.getUserProgressOnce()
 
                 if (roomProgress != null) {
-                    println("HybridDataManager: Local user - using Room data: XP: ${roomProgress.totalXP}, Daily XP: ${roomProgress.dailyXPEarned}, Daily Minutes: ${roomProgress.dailyReadingMinutes}/${roomProgress.dailyTarget}, Streak: ${roomProgress.streakDays}")
+                    println("HybridDataManager: Using Room data: XP: ${roomProgress.totalXP}, Daily XP: ${roomProgress.dailyXPEarned}, Daily Minutes: ${roomProgress.dailyReadingMinutes}/${roomProgress.dailyTarget}, Streak: ${roomProgress.streakDays}")
+                    // Sync to Firestore for future access
+                    try {
+                        firestoreRepository.saveUserProgress(userId, roomProgress)
+                        firestoreRepository.updateUserXP(userId, getCurrentUsername(), roomProgress.totalXP)
+                        println("HybridDataManager: Synced Room data to Firestore")
+                    } catch (e: Exception) {
+                        println("HybridDataManager: Failed to sync to Firestore: ${e.message}")
+                    }
                     roomProgress
                 } else {
-                    // Create default progress for local user
+                    // Create default progress
                     val defaultProgress = UserProgress()
                     userDataRepository.updateUserProgress(defaultProgress)
-                    println("HybridDataManager: Created default progress for local user")
+                    // Also save to Firestore
+                    try {
+                        firestoreRepository.saveUserProgress(userId, defaultProgress)
+                        firestoreRepository.updateUserXP(userId, getCurrentUsername(), 0)
+                        println("HybridDataManager: Created and synced default progress")
+                    } catch (e: Exception) {
+                        println("HybridDataManager: Failed to save default progress to Firestore: ${e.message}")
+                    }
+                    println("HybridDataManager: Created default progress")
                     defaultProgress
                 }
             }
@@ -337,16 +354,18 @@ class HybridDataManager(
                 totalXP = currentProgress.totalXP + xpToAdd
             )
 
-            // Update based on user type
-            val isFirebaseUser = isFirebaseUser()
-            if (isFirebaseUser) {
-                // Firebase user: Update Firestore
+            // Update Firestore for all users (to appear in leaderboard)
+            try {
                 firestoreRepository.saveUserProgress(userId, updatedProgress)
                 firestoreRepository.updateUserXP(userId, getCurrentUsername(), xpToAdd)
-            } else {
-                // Local user: Update Room
-                userDataRepository.updateUserProgress(updatedProgress)
+                println("HybridDataManager: Updated Firestore for admin XP addition")
+            } catch (e: Exception) {
+                println("HybridDataManager: Failed to update Firestore for admin XP: ${e.message}")
             }
+
+            // Also update Room for consistency
+            userDataRepository.updateUserProgress(updatedProgress)
+            println("HybridDataManager: Updated Room for admin XP addition")
 
             println("HybridDataManager: Admin added $xpToAdd XP to user $userId")
             Result.success(Unit)
@@ -362,19 +381,23 @@ class HybridDataManager(
     suspend fun resetUserData() {
         try {
             val userId = getCurrentUserId()
-            val isFirebaseUser = isFirebaseUser()
-            println("HybridDataManager: Resetting data for user $userId (Firebase: $isFirebaseUser)")
+            val username = getCurrentUsername()
+            println("HybridDataManager: Resetting data for user $userId ($username)")
 
             val defaultProgress = UserProgress()
 
-            if (isFirebaseUser) {
-                // Reset Firestore data for Firebase user
+            // Reset Firestore data for all users (for leaderboard)
+            try {
                 firestoreRepository.saveUserProgress(userId, defaultProgress)
-                firestoreRepository.updateUserXP(userId, getCurrentUsername(), 0)
-            } else {
-                // Reset Room data for local user
-                userDataRepository.updateUserProgress(defaultProgress)
+                firestoreRepository.updateUserXP(userId, username, 0)
+                println("HybridDataManager: Reset Firestore data")
+            } catch (e: Exception) {
+                println("HybridDataManager: Failed to reset Firestore data: ${e.message}")
             }
+
+            // Reset Room data for offline access
+            userDataRepository.updateUserProgress(defaultProgress)
+            println("HybridDataManager: Reset Room data")
 
             println("HybridDataManager: User data reset completed")
         } catch (e: Exception) {

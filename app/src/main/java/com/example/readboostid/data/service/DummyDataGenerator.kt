@@ -8,16 +8,32 @@ object DummyDataGenerator {
 
     private val firestore = FirebaseFirestore.getInstance()
 
-    // Dummy users dengan XP rendah untuk testing
-    private val dummyUsers = listOf(
-        Triple("alex_reader", "Alex Johnson", 45),      // XP rendah
-        Triple("sarah_bookworm", "Sarah Chen", 32),     // XP rendah
-        Triple("mike_learner", "Mike Wilson", 28),      // XP rendah
-        Triple("lisa_student", "Lisa Park", 51),        // XP sedang
-        Triple("david_researcher", "David Kim", 39),    // XP sedang
-        Triple("emma_writer", "Emma Taylor", 67),       // XP tinggi
-        Triple("ryan_developer", "Ryan Garcia", 23),    // XP rendah
-        Triple("anna_designer", "Anna Brown", 41)       // XP sedang
+    // Dummy users untuk ALL-TIME leaderboard (XP tinggi - ribuan)
+    private val allTimeDummyUsers = listOf(
+        Triple("dokja_reader", "Dokja", 8540),              // Kim Dokja - Protagonist ORV
+        Triple("sooyoung_reader", "Sooyoung", 7230),         // Yoo Joonghyuk's companion
+        Triple("joonghyuk_reader", "Joonghyuk", 6890),       // Yoo Joonghyuk - Regressor
+        Triple("hakhyun_reader", "Hakhyun", 6120),           // Lee Hakhyun - Disaster of Questions
+        Triple("uriel_reader", "Uriel", 5980),               // Uriel - Archangel
+        Triple("ricardo_reader", "Ricardo", 5430),           // Ricardo - King of Beauty
+        Triple("ryan_reader", "Ryan", 4980),                 // Ryan - Spear that Pierces the Side
+        Triple("chalista_reader", "Chalista", 4520),         // Disaster of Floods
+        Triple("jeje_reader", "Jeje", 4210),                 // Jeje - Prisoner of the Golden Headband
+        Triple("arthur_reader", "Arthur", 3890)              // Arthur - King of the Last World
+    )
+
+    // Dummy users untuk WEEKLY leaderboard (XP maksimal 3000)
+    private val weeklyDummyUsers = listOf(
+        Triple("faiz_reader", "Faiz Galen", 2850),           // Nama Indonesia
+        Triple("anindya_reader", "Anindya", 2420),           // Nama Indonesia
+        Triple("najla_reader", "Najla", 2300),               // Nama Indonesia
+        Triple("naylannajwa_reader", "Naylannajwa", 2150),   // Nama Indonesia
+        Triple("erfina_reader", "Erfina", 1980),             // Nama Indonesia
+        Triple("chandra_reader", "Chandra", 1850),           // Nama Indonesia
+        Triple("nadia_reader", "Nadia", 1720),               // Nama Indonesia
+        Triple("raisya_reader", "Raisya", 1650),             // Nama Indonesia
+        Triple("aofy_reader", "Aofy", 1520),                 // Nama Indonesia
+        Triple("nurjanah_reader", "Nurjanah", 1410)         // Nama Indonesia
     )
 
     suspend fun generateDummyLeaderboardData() {
@@ -25,9 +41,10 @@ object DummyDataGenerator {
             println("DummyDataGenerator: Generating dummy leaderboard data...")
             val batch = firestore.batch()
 
-            dummyUsers.forEach { (userId, username, xp) ->
-                println("DummyDataGenerator: Adding user $username with $xp XP")
-                val userDocRef = firestore.collection("leaderboard").document(userId)
+            // Generate ALL-TIME leaderboard data (static dummy data)
+            allTimeDummyUsers.forEachIndexed { index, (userId, username, xp) ->
+                println("DummyDataGenerator: Adding ALL-TIME #${index + 1} - $username (ID: $userId) with $xp XP")
+                val userDocRef = firestore.collection("leaderboard_alltime").document(userId)
                 val userData = mapOf(
                     "userId" to userId,
                     "username" to username,
@@ -37,12 +54,36 @@ object DummyDataGenerator {
                 batch.set(userDocRef, userData)
             }
 
+            // Generate initial WEEKLY leaderboard data for current week (as fallback)
+            val currentWeekKey = getCurrentWeekKey()
+            weeklyDummyUsers.forEachIndexed { index, (userId, username, xp) ->
+                println("DummyDataGenerator: Adding WEEKLY #${index + 1} - $username (ID: $userId) with $xp XP for week $currentWeekKey")
+                val userDocRef = firestore.collection("leaderboard_weekly_$currentWeekKey").document(userId)
+                val userData = mapOf(
+                    "userId" to userId,
+                    "username" to username,
+                    "totalXP" to xp,
+                    "weekKey" to currentWeekKey,
+                    "lastUpdated" to System.currentTimeMillis()
+                )
+                batch.set(userDocRef, userData)
+            }
+
             batch.commit().await()
-            println("DummyDataGenerator: Dummy leaderboard data generated successfully! Added ${dummyUsers.size} users.")
+            println("DummyDataGenerator: Dummy leaderboard data generated successfully! Added ${allTimeDummyUsers.size} all-time and ${weeklyDummyUsers.size} weekly users for week $currentWeekKey.")
         } catch (e: Exception) {
             println("DummyDataGenerator: Error generating dummy data: ${e.message}")
             e.printStackTrace()
         }
+    }
+
+    // Helper function to get current week key
+    private fun getCurrentWeekKey(): String {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.timeInMillis = System.currentTimeMillis()
+        val year = calendar.get(java.util.Calendar.YEAR)
+        val week = calendar.get(java.util.Calendar.WEEK_OF_YEAR)
+        return String.format("%04d_%02d", year, week)
     }
 
     suspend fun generateDummyUserProgressData() {
@@ -50,7 +91,7 @@ object DummyDataGenerator {
             val batch = firestore.batch()
 
             // Generate progress data untuk beberapa dummy users
-            val progressUsers = dummyUsers.take(5) // Ambil 5 user pertama
+            val progressUsers = allTimeDummyUsers.take(5) // Ambil 5 user pertama dari all-time
 
             progressUsers.forEach { (userId, username, xp) ->
                 val progressDocRef = firestore.collection("user_progress").document(userId)
@@ -77,30 +118,73 @@ object DummyDataGenerator {
 
     suspend fun clearAllDummyData() {
         try {
-            // Clear leaderboard data
-            val leaderboardSnapshot = firestore.collection("leaderboard").get().await()
-            val batch = firestore.batch()
+            println("DummyDataGenerator: Starting to clear all dummy data...")
 
-            leaderboardSnapshot.documents.forEach { doc ->
-                batch.delete(doc.reference)
+            // Clear in batches to avoid Firestore limits
+            val staticCollectionsToClear = listOf(
+                "leaderboard",           // Old collection
+                "leaderboard_alltime",   // Static all-time collection
+                "user_progress",         // User progress data
+                "reading_sessions"       // Reading sessions
+            )
+
+            // Clear static collections
+            for (collectionName in staticCollectionsToClear) {
+                try {
+                    val snapshot = firestore.collection(collectionName).get().await()
+                    if (!snapshot.isEmpty) {
+                        println("DummyDataGenerator: Clearing ${snapshot.size()} documents from '$collectionName'")
+                        val batch = firestore.batch()
+                        snapshot.documents.forEach { doc ->
+                            batch.delete(doc.reference)
+                        }
+                        batch.commit().await()
+                        println("DummyDataGenerator: Successfully cleared '$collectionName'")
+                    } else {
+                        println("DummyDataGenerator: Collection '$collectionName' is already empty")
+                    }
+                } catch (e: Exception) {
+                    println("DummyDataGenerator: Error clearing collection '$collectionName': ${e.message}")
+                }
             }
 
-            // Clear user progress data
-            val progressSnapshot = firestore.collection("user_progress").get().await()
-            progressSnapshot.documents.forEach { doc ->
-                batch.delete(doc.reference)
+            // Clear weekly collections (find all weekly collections and clear them)
+            try {
+                // Get all collection IDs that start with "leaderboard_weekly_"
+                val allCollections = firestore.collectionGroup("dummy").limit(1).get().await()
+                // Since we can't easily list collections, we'll try to clear common weekly collections
+                val currentWeekKey = getCurrentWeekKey()
+
+                val weeklyCollectionsToClear = listOf(
+                    "leaderboard_weekly",  // Old static weekly
+                    "leaderboard_weekly_$currentWeekKey"  // Current week
+                )
+
+                for (collectionName in weeklyCollectionsToClear) {
+                    try {
+                        val snapshot = firestore.collection(collectionName).get().await()
+                        if (!snapshot.isEmpty) {
+                            println("DummyDataGenerator: Clearing ${snapshot.size()} documents from '$collectionName'")
+                            val batch = firestore.batch()
+                            snapshot.documents.forEach { doc ->
+                                batch.delete(doc.reference)
+                            }
+                            batch.commit().await()
+                            println("DummyDataGenerator: Successfully cleared '$collectionName'")
+                        }
+                    } catch (e: Exception) {
+                        // Ignore errors for collections that don't exist
+                        println("DummyDataGenerator: Collection '$collectionName' may not exist or already cleared")
+                    }
+                }
+            } catch (e: Exception) {
+                println("DummyDataGenerator: Error clearing weekly collections: ${e.message}")
             }
 
-            // Clear reading sessions
-            val sessionsSnapshot = firestore.collection("reading_sessions").get().await()
-            sessionsSnapshot.documents.forEach { doc ->
-                batch.delete(doc.reference)
-            }
-
-            batch.commit().await()
-            println("All dummy data cleared successfully!")
+            println("DummyDataGenerator: All dummy data clearing completed!")
         } catch (e: Exception) {
-            println("Error clearing dummy data: ${e.message}")
+            println("DummyDataGenerator: Error in clearAllDummyData: ${e.message}")
+            e.printStackTrace()
         }
     }
 
@@ -109,16 +193,21 @@ object DummyDataGenerator {
         try {
             println("DummyDataGenerator: Checking leaderboard data...")
 
-            val leaderboardSnapshot = firestore.collection("leaderboard").get().await()
-            println("DummyDataGenerator: Found ${leaderboardSnapshot.size()} leaderboard documents")
+            // Check all-time leaderboard data
+            val allTimeSnapshot = firestore.collection("leaderboard_alltime").get().await()
+            println("DummyDataGenerator: Found ${allTimeSnapshot.size()} all-time leaderboard documents")
 
-            if (leaderboardSnapshot.isEmpty) {
-                println("DummyDataGenerator: No leaderboard data found, generating dummy data...")
+            // Check weekly leaderboard data
+            val weeklySnapshot = firestore.collection("leaderboard_weekly").get().await()
+            println("DummyDataGenerator: Found ${weeklySnapshot.size()} weekly leaderboard documents")
+
+            if (allTimeSnapshot.isEmpty || weeklySnapshot.isEmpty) {
+                println("DummyDataGenerator: Leaderboard data incomplete, generating dummy data...")
                 generateDummyLeaderboardData()
                 generateDummyUserProgressData()
                 println("DummyDataGenerator: Dummy data initialization completed!")
             } else {
-                println("DummyDataGenerator: Leaderboard data already exists (${leaderboardSnapshot.size()} documents), skipping dummy data generation")
+                println("DummyDataGenerator: All leaderboard data exists (All-time: ${allTimeSnapshot.size()}, Weekly: ${weeklySnapshot.size()} documents), skipping dummy data generation")
                 // Uncomment the line below to force regenerate dummy data for testing
                 // forceRegenerateDummyData()
             }

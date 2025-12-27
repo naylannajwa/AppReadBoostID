@@ -48,12 +48,7 @@ fun UserManagementScreen(
 
     val uiState by userManagementViewModel.uiState.collectAsState()
 
-    // Dialog states
-    var showAddXPDialog by remember { mutableStateOf(false) }
-    var selectedUserId by remember { mutableStateOf("") }
-    var xpToAdd by remember { mutableStateOf("") }
-
-    // Clear messages after 3 seconds
+    // Clear messages after 3 seconds (if any)
     LaunchedEffect(uiState.errorMessage, uiState.successMessage) {
         if (uiState.errorMessage != null || uiState.successMessage != null) {
             kotlinx.coroutines.delay(3000)
@@ -179,35 +174,6 @@ fun UserManagementScreen(
                 }
             }
 
-            // Add XP Button
-            item {
-                Button(
-                    onClick = { showAddXPDialog = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    )
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add XP",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Tambah XP ke User",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
             // Info Card
             item {
                 Card(
@@ -219,96 +185,20 @@ fun UserManagementScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "📋 Sistem XP yang Adil:",
+                            text = "📋 Sistem XP Admin:",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFE65100)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "• XP didasarkan pada waktu baca aktual user\n• Bonus kompleksitas artikel (Teknologi +15, Bisnis +10)\n• Bonus durasi baca (5-10 min = +10, >10 min = +20)\n• Maksimal 500 XP per artikel\n• Minimum 5 XP untuk aktivitas membaca",
+                            text = "• Admin dapat menambah artikel dengan XP otomatis\n• 1 menit baca = 100 XP\n• Sistem menghitung XP berdasarkan durasi artikel\n• Maksimal XP per artikel disesuaikan dengan konten",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFE65100)
                         )
                     }
                 }
             }
-        }
-
-        // Add XP Dialog
-        if (showAddXPDialog) {
-            AlertDialog(
-                onDismissRequest = { showAddXPDialog = false },
-                title = {
-                    Text(
-                        text = "Tambah XP ke User",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = selectedUserId,
-                            onValueChange = { selectedUserId = it },
-                            label = { Text("User ID") },
-                            placeholder = { Text("Masukkan User ID") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
-
-                        OutlinedTextField(
-                            value = xpToAdd,
-                            onValueChange = { xpToAdd = it },
-                            label = { Text("Jumlah XP (max 500)") },
-                            placeholder = { Text("0") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
-
-                        if (uiState.errorMessage != null) {
-                            Text(
-                                text = uiState.errorMessage!!,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            val xpAmount = xpToAdd.toIntOrNull() ?: 0
-                            if (selectedUserId.isNotBlank() && xpAmount > 0 && xpAmount <= 500) {
-                                userManagementViewModel.addXPToUser(selectedUserId, xpAmount)
-                                showAddXPDialog = false
-                                selectedUserId = ""
-                                xpToAdd = ""
-                            }
-                        },
-                        enabled = selectedUserId.isNotBlank() && (xpToAdd.toIntOrNull() ?: 0) in 1..500 && !uiState.isLoading
-                    ) {
-                        if (uiState.isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp))
-                        } else {
-                            Text("Tambah XP")
-                        }
-                    }
-                },
-                dismissButton = {
-                    OutlinedButton(onClick = {
-                        showAddXPDialog = false
-                        selectedUserId = ""
-                        xpToAdd = ""
-                    }) {
-                        Text("Batal")
-                    }
-                }
-            )
         }
     }
 }
@@ -325,34 +215,10 @@ class UserManagementViewModel(
     private val _uiState = MutableStateFlow(UserManagementUiState())
     val uiState: StateFlow<UserManagementUiState> = _uiState.asStateFlow()
 
-    fun addXPToUser(userId: String, xpAmount: Int) {
-        viewModelScope.launch {
-            try {
-                _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-
-                val result = hybridDataManager.adminAddXPToUser(userId, xpAmount)
-                result.onSuccess {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        successMessage = "Berhasil menambah $xpAmount XP ke user"
-                    )
-                }.onFailure { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = exception.message ?: "Gagal menambah XP"
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Terjadi kesalahan: ${e.message}"
-                )
-            }
-        }
-    }
 
     fun clearMessages() {
         _uiState.value = _uiState.value.copy(
+            isLoading = false,
             errorMessage = null,
             successMessage = null
         )
