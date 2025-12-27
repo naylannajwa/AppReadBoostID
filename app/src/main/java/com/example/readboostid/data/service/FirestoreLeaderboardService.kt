@@ -109,6 +109,7 @@ class FirestoreLeaderboardService(
                     streakDays = document.getLong("streakDays")?.toInt() ?: 0,
                     dailyTarget = document.getLong("dailyTarget")?.toInt() ?: 5,
                     lastReadDate = document.getLong("lastReadDate") ?: 0L,
+                    lastStreakDate = document.getLong("lastStreakDate") ?: 0L,
                     dailyXPEarned = document.getLong("dailyXPEarned")?.toInt() ?: 0,
                     dailyReadingMinutes = document.getLong("dailyReadingMinutes")?.toInt() ?: 0
                 )
@@ -131,6 +132,7 @@ class FirestoreLeaderboardService(
                 "streakDays" to userProgress.streakDays,
                 "dailyTarget" to userProgress.dailyTarget,
                 "lastReadDate" to userProgress.lastReadDate,
+                "lastStreakDate" to userProgress.lastStreakDate,
                 "dailyXPEarned" to userProgress.dailyXPEarned,
                 "dailyReadingMinutes" to userProgress.dailyReadingMinutes,
                 "lastUpdated" to System.currentTimeMillis()

@@ -107,13 +107,27 @@ class HybridDataManager(
             // Calculate new progress
             val today = System.currentTimeMillis()
             val lastReadDate = currentProgress.lastReadDate
+            val lastStreakDate = currentProgress.lastStreakDate
+
+            // Get current date (start of day in milliseconds)
+            val todayStart = today / (1000 * 60 * 60 * 24) * (1000 * 60 * 60 * 24)
+            val lastStreakDayStart = lastStreakDate / (1000 * 60 * 60 * 24) * (1000 * 60 * 60 * 24)
+            val lastReadDayStart = lastReadDate / (1000 * 60 * 60 * 24) * (1000 * 60 * 60 * 24)
+
+            // Check if streak should increase (only once per day)
+            val shouldIncreaseStreak = todayStart > lastStreakDayStart
+
+            // Calculate streak reset (if more than 1 day gap from last read)
             val daysDifference = ((today - lastReadDate) / (1000 * 60 * 60 * 24)).toInt()
+            val shouldResetStreak = daysDifference > 1
 
             val newStreak = when {
-                daysDifference <= 1 -> currentProgress.streakDays + 1 // Continue streak
-                daysDifference > 1 -> 1 // Reset streak
-                else -> currentProgress.streakDays
+                shouldResetStreak -> 1 // Reset streak if gap > 1 day
+                shouldIncreaseStreak -> currentProgress.streakDays + 1 // Increase streak if new day
+                else -> currentProgress.streakDays // Keep current streak
             }
+
+            val newLastStreakDate = if (shouldIncreaseStreak) todayStart else lastStreakDate
 
             // Check if it's a new day (reset daily XP and minutes if so)
             val isNewDay = daysDifference >= 1
@@ -127,6 +141,7 @@ class HybridDataManager(
                 dailyXPEarned = newDailyXPEarned,
                 dailyReadingMinutes = newDailyReadingMinutes,
                 streakDays = newStreak,
+                lastStreakDate = newLastStreakDate,
                 lastReadDate = today
             )
 
@@ -303,6 +318,45 @@ class HybridDataManager(
     }
 
     /**
+     * Admin function: Add XP to specific user (max 500 XP)
+     */
+    suspend fun adminAddXPToUser(userId: String, xpToAdd: Int): Result<Unit> {
+        return try {
+            if (xpToAdd <= 0 || xpToAdd > 500) {
+                return Result.failure(Exception("XP harus antara 1-500"))
+            }
+
+            // Get current user progress
+            val currentProgress = getUserProgress()
+            if (currentProgress == null) {
+                return Result.failure(Exception("User tidak ditemukan"))
+            }
+
+            // Calculate new progress
+            val updatedProgress = currentProgress.copy(
+                totalXP = currentProgress.totalXP + xpToAdd
+            )
+
+            // Update based on user type
+            val isFirebaseUser = isFirebaseUser()
+            if (isFirebaseUser) {
+                // Firebase user: Update Firestore
+                firestoreRepository.saveUserProgress(userId, updatedProgress)
+                firestoreRepository.updateUserXP(userId, getCurrentUsername(), xpToAdd)
+            } else {
+                // Local user: Update Room
+                userDataRepository.updateUserProgress(updatedProgress)
+            }
+
+            println("HybridDataManager: Admin added $xpToAdd XP to user $userId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            println("HybridDataManager: Error adding XP to user: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Reset data untuk testing
      */
     suspend fun resetUserData() {
@@ -327,4 +381,5 @@ class HybridDataManager(
             println("HybridDataManager: Error resetting user data: ${e.message}")
         }
     }
+
 }

@@ -62,6 +62,7 @@ object DummyDataGenerator {
                     "lastReadDate" to (System.currentTimeMillis() - (1..3).random() * 24 * 60 * 60 * 1000), // 1-3 hari yang lalu
                     "dailyXPEarned" to xp, // XP yang didapat hari ini
                     "dailyReadingMinutes" to (xp * 2), // Asumsi 1 XP = 2 menit membaca
+                    "lastStreakDate" to System.currentTimeMillis(), // Hari terakhir streak
                     "lastUpdated" to System.currentTimeMillis()
                 )
                 batch.set(progressDocRef, progressData)

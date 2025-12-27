@@ -523,7 +523,7 @@ fun ProfileScreenPreview() {
                         userProgress = UserProgress(
                             totalXP = 250,
                             streakDays = 7,
-                            dailyTarget = 2,
+                            dailyTarget = 5,
                             dailyXPEarned = 3,
                             dailyReadingMinutes = 3
                         )

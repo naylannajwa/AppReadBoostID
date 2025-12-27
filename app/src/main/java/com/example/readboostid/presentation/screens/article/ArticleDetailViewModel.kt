@@ -158,27 +158,30 @@ class ArticleDetailViewModel(
                 println("  - Actual reading time: ${readingMinutes} min (${activeReadingTime}ms)")
                 println("  - Current streak: ${userProgress?.streakDays ?: 0}")
 
-                // Award XP based on reading time percentage
-                val xpEarned = when {
-                    activeReadingTime >= targetMs -> {
-                        println("  - Full XP awarded (target met)")
-                        article.xp
-                    }
-                    activeReadingTime >= targetMs * 0.5 -> {
-                        val partialXP = (article.xp * 0.5).toInt()
-                        println("  - 50% XP awarded (half target met): $partialXP")
-                        partialXP
-                    }
-                    activeReadingTime >= targetMs * 0.25 -> {
-                        val partialXP = (article.xp * 0.25).toInt()
-                        println("  - 25% XP awarded (quarter target met): $partialXP")
-                        partialXP
-                    }
-                    else -> {
-                        println("  - Minimum XP awarded (any reading): 5")
-                        5 // Minimum XP for any reading activity
-                    }
+                // Award XP based on reading time and article complexity (Fair system)
+                val baseXP = article.xp
+
+                // Time bonus: more XP for longer reading
+                val timeBonus = when {
+                    readingMinutes >= 10 -> 20  // Long article bonus
+                    readingMinutes >= 5 -> 10   // Medium article bonus
+                    readingMinutes >= 2 -> 5    // Short article bonus
+                    else -> 0
                 }
+
+                // Complexity bonus based on article category
+                val complexityBonus = when (article.category.lowercase()) {
+                    "teknologi", "sains", "programmer", "matematika" -> 15  // Complex topics
+                    "bisnis", "ekonomi", "politik", "kesehatan" -> 10       // Moderate complexity
+                    else -> 5                                                // General topics
+                }
+
+                // Total XP with cap at 500 (admin limit)
+                val totalXPEarned = (baseXP + timeBonus + complexityBonus).coerceAtMost(500)
+                val xpEarned = maxOf(totalXPEarned, 5) // Minimum 5 XP
+
+                println("  - Article XP: $baseXP, Time bonus: $timeBonus (${readingMinutes}min), Complexity bonus: $complexityBonus (${article.category})")
+                println("  - Total XP earned: $xpEarned (capped at 500)")
 
                 println("ArticleDetailViewModel: Final XP earned: $xpEarned")
 

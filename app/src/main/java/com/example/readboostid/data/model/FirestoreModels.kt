@@ -16,6 +16,7 @@ data class FirestoreUserProgress(
     val dailyTarget: Int = 5, // dalam menit
     val dailyXPEarned: Int = 0, // XP yang didapat hari ini
     val dailyReadingMinutes: Int = 0, // Menit membaca yang sudah dilakukan hari ini
+    val lastStreakDate: Long = 0L, // Hari terakhir streak diperoleh
     val articlesRead: Int = 0,
     val lastReadDate: Long = 0L,
     val currentStreakStartDate: Long = 0L,
@@ -32,6 +33,7 @@ data class LeaderboardEntry(
     val streakDays: Int = 0,
     val dailyXPEarned: Int = 0, // XP yang didapat hari ini
     val dailyReadingMinutes: Int = 0, // Menit membaca yang sudah dilakukan hari ini
+    val lastStreakDate: Long = 0L, // Hari terakhir streak diperoleh
     val rank: Int = 0,
     val avatarUrl: String? = null
 )

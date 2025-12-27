@@ -29,6 +29,7 @@ import com.readboost.id.presentation.viewmodel.ViewModelFactory
 fun AdminDashboardScreen(
     onNavigateToArticleManagement: () -> Unit,
     onNavigateToUserLogin: () -> Unit,
+    onNavigateToUserManagement: () -> Unit,
     onLogout: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -165,7 +166,8 @@ fun AdminDashboardScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 ActionButtonsSection(
                     onNavigateToUserLogin = onNavigateToUserLogin,
-                    onNavigateToAdminPanel = onNavigateToArticleManagement
+                    onNavigateToAdminPanel = onNavigateToArticleManagement,
+                    onNavigateToUserManagement = onNavigateToUserManagement
                 )
             }
 
@@ -363,52 +365,88 @@ fun GenreStatCard(genre: String, count: Int) {
 @Composable
 fun ActionButtonsSection(
     onNavigateToUserLogin: () -> Unit,
-    onNavigateToAdminPanel: () -> Unit
+    onNavigateToAdminPanel: () -> Unit,
+    onNavigateToUserManagement: () -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Login User Button
-        Button(
-            onClick = onNavigateToUserLogin,
-            modifier = Modifier
-                .weight(1f)
-                .height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+        // First row - Login User and Kelola Artikel
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+            // Login User Button
+            Button(
+                onClick = onNavigateToUserLogin,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "User",
-                    modifier = Modifier.size(20.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "User",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Login User",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            // Kelola Artikel Button
+            Button(
+                onClick = onNavigateToAdminPanel,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF1976D2) // Blue color
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Login User",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Admin",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Kelola Artikel",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
 
-        // Kelola Artikel Button
+        // Second row - Manage User XP
         Button(
-            onClick = onNavigateToAdminPanel,
+            onClick = onNavigateToUserManagement,
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
                 .height(48.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF1976D2) // Blue color
+                containerColor = Color(0xFF4CAF50) // Green color for user management
             )
         ) {
             Row(
@@ -416,13 +454,13 @@ fun ActionButtonsSection(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Admin",
+                    imageVector = Icons.Default.AdminPanelSettings,
+                    contentDescription = "User Management",
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Kelola Artikel",
+                    text = "Kelola XP User",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -439,6 +477,7 @@ fun AdminDashboardScreenPreview() {
         AdminDashboardScreen(
             onNavigateToArticleManagement = {},
             onNavigateToUserLogin = {},
+            onNavigateToUserManagement = {},
             onLogout = {}
         )
     }

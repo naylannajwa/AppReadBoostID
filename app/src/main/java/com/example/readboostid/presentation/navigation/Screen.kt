@@ -21,6 +21,7 @@ sealed class Screen(val route: String) {
     object AdminAuth : Screen("admin_auth")
     object AdminDashboard : Screen("admin_dashboard")
     object Admin : Screen("admin")
+    object UserManagement : Screen("user_management")
     object AddArticle : Screen("add_article")
     object EditArticle : Screen("edit_article/{articleId}") {
         fun createRoute(articleId: Int) = "edit_article/$articleId"

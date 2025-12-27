@@ -16,6 +16,7 @@ import com.readboost.id.presentation.screens.admin.AdminAuthScreen
 import com.readboost.id.presentation.screens.admin.AdminDashboardScreen
 import com.readboost.id.presentation.screens.admin.AdminScreen
 import com.readboost.id.presentation.screens.admin.EditArticleScreen
+import com.readboost.id.presentation.screens.admin.UserManagementScreen
 import com.readboost.id.presentation.screens.home.HomeScreen
 import com.readboost.id.presentation.screens.article.ArticleListScreen
 import com.readboost.id.presentation.screens.article.ArticleDetailScreen
@@ -235,10 +236,21 @@ fun NavGraph(
                 onNavigateToUserLogin = {
                     navController.navigate(Screen.Login.route)
                 },
+                onNavigateToUserManagement = {
+                    navController.navigate(Screen.UserManagement.route)
+                },
                 onLogout = {
                     navController.navigate(Screen.Welcome.route) {
                         popUpTo(0) // Clear entire back stack
                     }
+                }
+            )
+        }
+
+        composable(Screen.UserManagement.route) {
+            UserManagementScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }
