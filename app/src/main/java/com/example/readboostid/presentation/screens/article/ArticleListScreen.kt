@@ -18,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.readboost.id.ReadBoostApplication
 import com.readboost.id.data.model.Article
 import com.readboost.id.presentation.screens.home.ArticleCard
+import com.readboost.id.presentation.screens.home.BottomNavigationBar
 import com.readboost.id.presentation.viewmodel.ViewModelFactory
 import com.readboost.id.ui.theme.ReadBoostTheme
 
@@ -25,6 +26,9 @@ import com.readboost.id.ui.theme.ReadBoostTheme
 @Composable
 fun ArticleListScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToLeaderboard: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     onArticleClick: (Int) -> Unit
 ) {
     val context = LocalContext.current
@@ -46,6 +50,15 @@ fun ArticleListScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                selectedRoute = "article",
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToArticleList = {},
+                onNavigateToLeaderboard = onNavigateToLeaderboard,
+                onNavigateToProfile = onNavigateToProfile
             )
         }
     ) { paddingValues ->
@@ -112,6 +125,15 @@ fun ArticleListScreenPreview() {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     }
+                )
+            },
+            bottomBar = {
+                BottomNavigationBar(
+                    selectedRoute = "article",
+                    onNavigateToHome = {},
+                    onNavigateToArticleList = {},
+                    onNavigateToLeaderboard = {},
+                    onNavigateToProfile = {}
                 )
             }
         ) { paddingValues ->

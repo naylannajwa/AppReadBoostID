@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.readboost.id.ReadBoostApplication
 import com.readboost.id.data.model.UserProgress
+import com.readboost.id.presentation.screens.home.BottomNavigationBar
 import com.readboost.id.presentation.viewmodel.ViewModelFactory
 import com.readboost.id.ui.theme.ReadBoostTheme
 
@@ -24,6 +25,9 @@ import com.readboost.id.ui.theme.ReadBoostTheme
 @Composable
 fun ProfileScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToArticleList: () -> Unit,
+    onNavigateToLeaderboard: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToNotes: () -> Unit
 ) {
@@ -50,6 +54,15 @@ fun ProfileScreen(
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 }
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                selectedRoute = "profile",
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToArticleList = onNavigateToArticleList,
+                onNavigateToLeaderboard = onNavigateToLeaderboard,
+                onNavigateToProfile = {}
             )
         }
     ) { paddingValues ->
@@ -324,6 +337,15 @@ fun ProfileScreenPreview() {
                             Icon(Icons.Default.Settings, contentDescription = "Settings")
                         }
                     }
+                )
+            },
+            bottomBar = {
+                BottomNavigationBar(
+                    selectedRoute = "profile",
+                    onNavigateToHome = {},
+                    onNavigateToArticleList = {},
+                    onNavigateToLeaderboard = {},
+                    onNavigateToProfile = {}
                 )
             }
         ) { paddingValues ->

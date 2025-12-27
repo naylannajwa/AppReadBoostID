@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.readboost.id.ReadBoostApplication
 import com.readboost.id.data.model.Leaderboard
+import com.readboost.id.presentation.screens.home.BottomNavigationBar
 import com.readboost.id.presentation.viewmodel.ViewModelFactory
 import com.readboost.id.ui.theme.ReadBoostTheme
 import kotlin.math.abs
@@ -36,7 +37,10 @@ import kotlin.math.abs
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToArticleList: () -> Unit,
+    onNavigateToProfile: () -> Unit
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as? ReadBoostApplication
@@ -68,6 +72,15 @@ fun LeaderboardScreen(
             topBar = {
                 LeaderboardHeader(onNavigateBack = onNavigateBack)
             },
+            bottomBar = {
+                BottomNavigationBar(
+                    selectedRoute = "leaderboard",
+                    onNavigateToHome = onNavigateToHome,
+                    onNavigateToArticleList = onNavigateToArticleList,
+                    onNavigateToLeaderboard = {},
+                    onNavigateToProfile = onNavigateToProfile
+                )
+            },
             containerColor = Color.Transparent
         ) { paddingValues ->
             if (uiState.isLoading) {
@@ -77,7 +90,7 @@ fun LeaderboardScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    contentPadding = PaddingValues(bottom = 24.dp)
+                    contentPadding = PaddingValues(bottom = 24.dp, top = 16.dp)
                 ) {
                     // Welcome section with trophy
                     item {
@@ -773,13 +786,22 @@ fun LeaderboardScreenPreview() {
                 topBar = {
                     LeaderboardHeader(onNavigateBack = {})
                 },
+                bottomBar = {
+                    BottomNavigationBar(
+                        selectedRoute = "leaderboard",
+                        onNavigateToHome = {},
+                        onNavigateToArticleList = {},
+                        onNavigateToLeaderboard = {},
+                        onNavigateToProfile = {}
+                    )
+                },
                 containerColor = Color.Transparent
             ) { paddingValues ->
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    contentPadding = PaddingValues(bottom = 24.dp)
+                    contentPadding = PaddingValues(bottom = 24.dp, top = 16.dp)
                 ) {
                     // Welcome section
                     item {
