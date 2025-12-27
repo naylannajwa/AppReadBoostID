@@ -23,7 +23,12 @@ class FirestoreLeaderboardService(
 
     // Leaderboard Operations
     suspend fun getLeaderboard(limit: Int = 50): List<Leaderboard> {
+        return getAllTimeLeaderboard(limit)
+    }
+
+    suspend fun getAllTimeLeaderboard(limit: Int = 50): List<Leaderboard> {
         return try {
+            println("FirestoreLeaderboardService: Getting all-time leaderboard")
             val snapshot = firestore.collection(LEADERBOARD_COLLECTION)
                 .orderBy("totalXP", Query.Direction.DESCENDING)
                 .limit(limit.toLong())
@@ -31,15 +36,39 @@ class FirestoreLeaderboardService(
                 .await()
 
             val leaderboard = snapshot.documents.mapIndexed { index, document ->
+                val userId = document.getString("userId") ?: "unknown"
+                val username = document.getString("username") ?: "Unknown"
+                val totalXP = document.getLong("totalXP")?.toInt() ?: 0
+                val rank = index + 1
+
+                println("FirestoreLeaderboardService: All-time - $username: $totalXP XP (Rank: $rank)")
                 Leaderboard(
-                    userId = document.getString("userId")?.hashCode() ?: 0,
-                    username = document.getString("username") ?: "Unknown",
-                    totalXP = document.getLong("totalXP")?.toInt() ?: 0,
-                    rank = index + 1
+                    userId = userId.hashCode(),
+                    username = username,
+                    totalXP = totalXP,
+                    rank = rank
                 )
             }
             leaderboard
         } catch (e: Exception) {
+            println("FirestoreLeaderboardService: Error getting all-time leaderboard: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun getWeeklyLeaderboard(limit: Int = 50): List<Leaderboard> {
+        return try {
+            println("FirestoreLeaderboardService: Getting weekly leaderboard")
+            // For now, return same as all-time since we don't have weekly data structure yet
+            // In production, you would filter by last week's data
+            val allTimeData = getAllTimeLeaderboard(limit)
+
+            // Simulate weekly by taking top users (in real app, filter by timestamp)
+            allTimeData.take(limit).mapIndexed { index, entry ->
+                entry.copy(rank = index + 1)
+            }
+        } catch (e: Exception) {
+            println("FirestoreLeaderboardService: Error getting weekly leaderboard: ${e.message}")
             emptyList()
         }
     }
@@ -80,7 +109,8 @@ class FirestoreLeaderboardService(
                     streakDays = document.getLong("streakDays")?.toInt() ?: 0,
                     dailyTarget = document.getLong("dailyTarget")?.toInt() ?: 5,
                     lastReadDate = document.getLong("lastReadDate") ?: 0L,
-                    totalReadingTime = document.getLong("totalReadingTime")?.toInt() ?: 0
+                    dailyXPEarned = document.getLong("dailyXPEarned")?.toInt() ?: 0,
+                    dailyReadingMinutes = document.getLong("dailyReadingMinutes")?.toInt() ?: 0
                 )
             } else {
                 // Create default user progress if not exists
@@ -101,7 +131,8 @@ class FirestoreLeaderboardService(
                 "streakDays" to userProgress.streakDays,
                 "dailyTarget" to userProgress.dailyTarget,
                 "lastReadDate" to userProgress.lastReadDate,
-                "totalReadingTime" to userProgress.totalReadingTime,
+                "dailyXPEarned" to userProgress.dailyXPEarned,
+                "dailyReadingMinutes" to userProgress.dailyReadingMinutes,
                 "lastUpdated" to System.currentTimeMillis()
             )
 
@@ -184,22 +215,36 @@ class FirestoreLeaderboardService(
     // Flow untuk real-time updates
     fun getLeaderboardFlow(limit: Int = 50): Flow<List<Leaderboard>> = flow {
         try {
+            println("FirestoreLeaderboardService: Querying leaderboard collection...")
             val snapshot = firestore.collection(LEADERBOARD_COLLECTION)
                 .orderBy("totalXP", Query.Direction.DESCENDING)
                 .limit(limit.toLong())
                 .get()
                 .await()
 
+            println("FirestoreLeaderboardService: Found ${snapshot.size()} documents in leaderboard collection")
+
             val leaderboard = snapshot.documents.mapIndexed { index, document ->
+                val userId = document.getString("userId") ?: "unknown"
+                val username = document.getString("username") ?: "Unknown"
+                val totalXP = document.getLong("totalXP")?.toInt() ?: 0
+                val rank = index + 1
+
+                println("FirestoreLeaderboardService: Document ${document.id} -> $username: $totalXP XP (Rank: $rank)")
+
                 Leaderboard(
-                    userId = document.getString("userId")?.hashCode() ?: 0,
-                    username = document.getString("username") ?: "Unknown",
-                    totalXP = document.getLong("totalXP")?.toInt() ?: 0,
-                    rank = index + 1
+                    userId = userId.hashCode(),
+                    username = username,
+                    totalXP = totalXP,
+                    rank = rank
                 )
             }
+
+            println("FirestoreLeaderboardService: Emitting ${leaderboard.size} leaderboard entries")
             emit(leaderboard)
         } catch (e: Exception) {
+            println("FirestoreLeaderboardService: Error getting leaderboard: ${e.message}")
+            e.printStackTrace()
             emit(emptyList())
         }
     }
@@ -218,7 +263,7 @@ class FirestoreLeaderboardService(
                     streakDays = document.getLong("streakDays")?.toInt() ?: 0,
                     dailyTarget = document.getLong("dailyTarget")?.toInt() ?: 5,
                     lastReadDate = document.getLong("lastReadDate") ?: 0L,
-                    totalReadingTime = document.getLong("totalReadingTime")?.toInt() ?: 0
+                    dailyXPEarned = document.getLong("dailyXPEarned")?.toInt() ?: 0
                 )
             } else {
                 UserProgress()

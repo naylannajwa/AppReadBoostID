@@ -7,10 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.readboost.id.data.model.Article
 import com.readboost.id.data.model.Notes
 import com.readboost.id.data.model.ReadingSession
+import com.readboost.id.data.service.HybridDataManager
 import com.readboost.id.domain.repository.ArticleRepository
-import com.readboost.id.domain.repository.FirestoreLeaderboardRepository
 import com.readboost.id.domain.repository.UserDataRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class ArticleDetailUiState(
@@ -25,7 +28,7 @@ data class ArticleDetailUiState(
 class ArticleDetailViewModel(
     private val articleRepository: ArticleRepository,
     private val userDataRepository: UserDataRepository,
-    private val firestoreRepository: FirestoreLeaderboardRepository,
+    private val hybridDataManager: HybridDataManager,
     private val articleId: Int
 ) : ViewModel() {
 
@@ -65,22 +68,26 @@ class ArticleDetailViewModel(
     }
 
     fun startReading() {
+        println("ArticleDetailViewModel: startReading() called for articleId: $articleId")
         viewModelScope.launch {
             try {
-                // Start Firestore reading session
-                val userId = "current_user_id" // TODO: Get from FirebaseAuth
-                currentSessionId = "${userId}_${articleId}_${System.currentTimeMillis()}"
-                firestoreRepository.startReadingSession(userId, articleId)
+                // Start Firestore reading session through hybrid manager
+                println("ArticleDetailViewModel: Starting reading session for article: $articleId")
+                currentSessionId = hybridDataManager.startReadingSession(articleId)
                 lastActiveTime = System.currentTimeMillis()
+                println("ArticleDetailViewModel: Session started with ID: $currentSessionId")
 
                 _uiState.update { state ->
                     val session = state.readingSession
                     if (session != null) {
                         session.isPaused = false
+                        println("ArticleDetailViewModel: Reading session unpaused")
                     }
                     state.copy(readingSession = session)
                 }
             } catch (e: Exception) {
+                println("ArticleDetailViewModel: Error starting reading session: ${e.message}")
+                e.printStackTrace()
                 // Fallback to local session
                 _uiState.update { state ->
                     val session = state.readingSession
@@ -98,13 +105,16 @@ class ArticleDetailViewModel(
             activeReadingTime += activeTimeIncrement
             lastActiveTime = System.currentTimeMillis()
 
+            println("ArticleDetailViewModel: Updated reading time by ${activeTimeIncrement}ms, total active time: ${activeReadingTime}ms")
+
             // Update Firestore session if active
             currentSessionId?.let { sessionId ->
                 viewModelScope.launch {
                     try {
-                        firestoreRepository.updateReadingSession(sessionId, activeTimeIncrement)
+                        hybridDataManager.updateReadingSession(sessionId, activeTimeIncrement)
+                        println("ArticleDetailViewModel: Updated Firestore session: $sessionId")
                     } catch (e: Exception) {
-                        // Handle error silently
+                        println("ArticleDetailViewModel: Error updating Firestore session: ${e.message}")
                     }
                 }
             }
@@ -130,35 +140,80 @@ class ArticleDetailViewModel(
     }
 
     fun completeReading() {
+        println("ArticleDetailViewModel: completeReading() called - activeTime: ${activeReadingTime}ms")
         viewModelScope.launch {
             val article = _uiState.value.article ?: return@launch
             val session = _uiState.value.readingSession ?: return@launch
 
             try {
-                // End Firestore session and award XP if target met
-                val userId = "current_user_id" // TODO: Get from FirebaseAuth
-                val userProgress = firestoreRepository.getUserProgress(userId)
-
+                // Calculate XP earned based on reading time vs target
+                val userProgress = hybridDataManager.getUserProgress()
                 val targetMinutes = userProgress?.dailyTarget ?: 5
-                val xpEarned = if (activeReadingTime >= targetMinutes * 60 * 1000) article.xp else 0
+                val targetMs = targetMinutes * 60 * 1000L
+                val readingMinutes = activeReadingTime / (1000.0 * 60.0)
 
-                currentSessionId?.let { sessionId ->
-                    firestoreRepository.endReadingSession(sessionId, xpEarned)
+                println("ArticleDetailViewModel: Article completion calculation:")
+                println("  - Article XP: ${article.xp}")
+                println("  - Target time: ${targetMinutes} min (${targetMs}ms)")
+                println("  - Actual reading time: ${readingMinutes} min (${activeReadingTime}ms)")
+                println("  - Current streak: ${userProgress?.streakDays ?: 0}")
+
+                // Award XP based on reading time percentage
+                val xpEarned = when {
+                    activeReadingTime >= targetMs -> {
+                        println("  - Full XP awarded (target met)")
+                        article.xp
+                    }
+                    activeReadingTime >= targetMs * 0.5 -> {
+                        val partialXP = (article.xp * 0.5).toInt()
+                        println("  - 50% XP awarded (half target met): $partialXP")
+                        partialXP
+                    }
+                    activeReadingTime >= targetMs * 0.25 -> {
+                        val partialXP = (article.xp * 0.25).toInt()
+                        println("  - 25% XP awarded (quarter target met): $partialXP")
+                        partialXP
+                    }
+                    else -> {
+                        println("  - Minimum XP awarded (any reading): 5")
+                        5 // Minimum XP for any reading activity
+                    }
                 }
 
-                if (xpEarned > 0) {
-                    firestoreRepository.updateUserXP(userId, "Current User", xpEarned)
+                println("ArticleDetailViewModel: Final XP earned: $xpEarned")
+
+                // Use hybrid manager to handle both Room and Firestore updates
+                hybridDataManager.onArticleCompleted(articleId, xpEarned, activeReadingTime.toInt())
+                println("ArticleDetailViewModel: Article completion processed through hybrid manager")
+
+                // End reading session in Firestore
+                currentSessionId?.let { sessionId ->
+                    try {
+                        hybridDataManager.endReadingSession(sessionId, xpEarned)
+                        println("ArticleDetailViewModel: Firestore session ended: $sessionId")
+                    } catch (e: Exception) {
+                        println("ArticleDetailViewModel: Error ending Firestore session: ${e.message}")
+                    }
                 }
 
                 session.isCompleted = true
                 _uiState.update { state ->
                     state.copy(readingSession = session)
                 }
+
             } catch (e: Exception) {
-                // Fallback to local database
-                val progress = userDataRepository.getUserProgressOnce()
-                if (progress != null && activeReadingTime >= progress.dailyTarget * 60 * 1000) {
-                    userDataRepository.completeReadingSession(article.xp)
+                println("ArticleDetailViewModel: Error completing reading: ${e.message}")
+                e.printStackTrace()
+                // Fallback to local database only
+                try {
+                    val progress = hybridDataManager.getUserProgress()
+                    if (progress != null && activeReadingTime >= progress.dailyTarget * 60 * 1000) {
+                        // Award XP locally through hybrid manager
+                        hybridDataManager.onArticleCompleted(articleId, article.xp, activeReadingTime.toInt())
+                        println("ArticleDetailViewModel: Fallback - XP awarded locally")
+                    }
+                } catch (localException: Exception) {
+                    println("ArticleDetailViewModel: Error in fallback: ${localException.message}")
                 }
 
                 session.isCompleted = true
@@ -191,8 +246,13 @@ class ArticleDetailViewModel(
                     content = content
                 )
                 userDataRepository.insertNote(newNote)
-                // Add XP for creating note
-                userDataRepository.addXP(5)
+                // Add XP for creating note (through hybrid manager)
+                try {
+                    hybridDataManager.onArticleCompleted(articleId, 5, 0) // 5 XP for note
+                } catch (e: Exception) {
+                    // If hybrid fails, add locally
+                    // Note: This could be improved
+                }
             }
 
             hideNoteDialog()

@@ -31,7 +31,7 @@ class ViewModelFactory(
                 NotesViewModel(appContainer.userDataRepository) as T
             }
             modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
-                ProfileViewModel(appContainer.userDataRepository, appContainer.firestoreLeaderboardRepository) as T
+                ProfileViewModel(appContainer.hybridDataManager) as T
             }
             modelClass.isAssignableFrom(LeaderboardViewModel::class.java) -> {
                 LeaderboardViewModel(appContainer.userDataRepository, appContainer.firestoreLeaderboardRepository) as T
@@ -74,7 +74,7 @@ class ArticleDetailViewModelFactory(
             return ArticleDetailViewModel(
                 appContainer.articleRepository,
                 appContainer.userDataRepository,
-                appContainer.firestoreLeaderboardRepository,
+                appContainer.hybridDataManager,
                 articleId
             ) as T
         }

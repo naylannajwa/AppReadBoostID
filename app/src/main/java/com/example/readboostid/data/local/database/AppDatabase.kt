@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
         AdminUser::class,
         User::class
     ],
-    version = 5,
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -435,9 +435,10 @@ Konservasi hutan hujan tropis Indonesia sangat penting untuk menjaga keanekaraga
                 id = 1,
                 totalXP = 0,
                 streakDays = 0,
-                dailyTarget = 5,
+                dailyTarget = 2,
                 lastReadDate = 0L,
-                totalReadingTime = 0
+                dailyXPEarned = 0,
+                dailyReadingMinutes = 0
             )
             userProgressDao.insertUserProgress(userProgress)
 

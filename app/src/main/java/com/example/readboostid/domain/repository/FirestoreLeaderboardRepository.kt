@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 interface FirestoreLeaderboardRepository {
     // Leaderboard operations
     suspend fun getLeaderboard(limit: Int): List<Leaderboard>
+    suspend fun getAllTimeLeaderboard(limit: Int): List<Leaderboard>
+    suspend fun getWeeklyLeaderboard(limit: Int): List<Leaderboard>
     fun getLeaderboardFlow(limit: Int): Flow<List<Leaderboard>>
     suspend fun updateUserXP(userId: String, username: String, xpToAdd: Int)
 

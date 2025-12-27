@@ -48,6 +48,12 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showTargetDialog by remember { mutableStateOf(false) }
 
+    // Refresh data when screen becomes visible (e.g., after reading article)
+    LaunchedEffect(Unit) {
+        println("ProfileScreen: Screen became visible, refreshing data")
+        viewModel.refreshData()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,6 +64,9 @@ fun ProfileScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { viewModel.forceRefreshData() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh Data")
+                    }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
@@ -98,7 +107,7 @@ fun ProfileScreen(
 
                 // Statistics Section - Vertical Layout
                 item {
-                    StatisticsSection(userProgress = uiState.userProgress)
+                    StatisticsSection(userProgress = uiState.userProgress ?: UserProgress())
                 }
 
                 // Quick Actions Section
@@ -208,22 +217,14 @@ fun StatisticsSection(userProgress: UserProgress?) {
             description = "Hari berturut-turut"
         )
 
-        // Target Statistic
+        // Target Status (berdasarkan menit membaca)
+        val isTargetAchieved = (userProgress?.dailyReadingMinutes ?: 0) >= (userProgress?.dailyTarget ?: 0)
         StatisticRowItem(
-            icon = Icons.Default.Schedule,
-            title = "Target Harian",
-            value = "${userProgress?.dailyTarget ?: 0} min",
-            color = Color(0xFF2196F3), // Blue
-            description = "Menit membaca per hari"
-        )
-
-        // Total Time Statistic
-        StatisticRowItem(
-            icon = Icons.Default.Timer,
-            title = "Waktu Total",
-            value = "${(userProgress?.totalReadingTime ?: 0) / 60} min",
-            color = Color(0xFF4CAF50), // Green
-            description = "Total waktu membaca"
+            icon = if (isTargetAchieved) Icons.Default.CheckCircle else Icons.Default.Schedule,
+            title = if (isTargetAchieved) "Target Harian Tercapai" else "Target Harian",
+            value = if (isTargetAchieved) "✓" else "${userProgress?.dailyReadingMinutes ?: 0}/${userProgress?.dailyTarget ?: 0} min",
+            color = if (isTargetAchieved) Color(0xFF4CAF50) else Color(0xFF2196F3), // Green if achieved, Blue if not
+            description = if (isTargetAchieved) "Selamat! Target hari ini tercapai" else "Progress membaca hari ini"
         )
     }
 }
@@ -522,8 +523,9 @@ fun ProfileScreenPreview() {
                         userProgress = UserProgress(
                             totalXP = 250,
                             streakDays = 7,
-                            dailyTarget = 5,
-                            totalReadingTime = 1800 // 30 minutes in seconds
+                            dailyTarget = 2,
+                            dailyXPEarned = 3,
+                            dailyReadingMinutes = 3
                         )
                     )
                 }
@@ -558,7 +560,8 @@ fun StatisticsSectionPreview() {
                 totalXP = 250,
                 streakDays = 7,
                 dailyTarget = 5,
-                totalReadingTime = 1800 // 30 minutes in seconds
+                dailyXPEarned = 3,
+                dailyReadingMinutes = 3
             )
         )
     }

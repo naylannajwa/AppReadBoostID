@@ -15,6 +15,14 @@ class FirestoreLeaderboardRepositoryImpl(
         return firestoreService.getLeaderboard(limit)
     }
 
+    override suspend fun getAllTimeLeaderboard(limit: Int): List<Leaderboard> {
+        return firestoreService.getAllTimeLeaderboard(limit)
+    }
+
+    override suspend fun getWeeklyLeaderboard(limit: Int): List<Leaderboard> {
+        return firestoreService.getWeeklyLeaderboard(limit)
+    }
+
     override fun getLeaderboardFlow(limit: Int): Flow<List<Leaderboard>> {
         return firestoreService.getLeaderboardFlow(limit)
     }

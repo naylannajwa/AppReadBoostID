@@ -55,6 +55,12 @@ fun LeaderboardScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    // Refresh data when screen becomes visible
+    LaunchedEffect(Unit) {
+        println("LeaderboardScreen: Screen became visible, force refreshing leaderboard")
+        viewModel.forceRefreshLeaderboard()
+    }
+
     // Background gradient
     Box(
         modifier = Modifier
@@ -81,6 +87,18 @@ fun LeaderboardScreen(
                     onNavigateToProfile = onNavigateToProfile
                 )
             },
+                floatingActionButton = {
+                    FloatingActionButton(
+                        onClick = { viewModel.forceRefreshLeaderboard() },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh Leaderboard"
+                        )
+                    }
+                },
             containerColor = Color.Transparent
         ) { paddingValues ->
             if (uiState.isLoading) {
@@ -794,6 +812,11 @@ fun LeaderboardScreenPreview() {
                         onNavigateToLeaderboard = {},
                         onNavigateToProfile = {}
                     )
+                },
+                floatingActionButton = {
+                    FloatingActionButton(onClick = {}) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                    }
                 },
                 containerColor = Color.Transparent
             ) { paddingValues ->

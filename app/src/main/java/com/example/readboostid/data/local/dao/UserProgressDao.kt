@@ -24,8 +24,6 @@ interface UserProgressDao {
     @Query("UPDATE user_progress SET streakDays = :streak, lastReadDate = :date WHERE id = 1")
     suspend fun updateStreak(streak: Int, date: Long)
 
-    @Query("UPDATE user_progress SET totalReadingTime = totalReadingTime + :seconds WHERE id = 1")
-    suspend fun addReadingTime(seconds: Int)
 
     @Query("UPDATE user_progress SET dailyTarget = :target WHERE id = 1")
     suspend fun updateDailyTarget(target: Int)

@@ -7,24 +7,47 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import com.readboost.id.ReadBoostApplication
+import com.readboost.id.data.service.DummyDataGenerator
 import com.readboost.id.ui.theme.ReadBoostTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import android.util.Log
 
 @Composable
 fun SplashScreen(onNavigateToLogin: () -> Unit) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(Unit) {
         try {
+            // Initialize dummy data in background (but don't force regenerate)
+            coroutineScope.launch {
+                try {
+                    val app = context.applicationContext as? ReadBoostApplication
+                    if (app != null) {
+                        // Just initialize dummy data if needed, don't force regenerate
+                        DummyDataGenerator.initializeDummyDataIfNeeded()
+                        Log.d("SplashScreen", "Dummy data initialization completed")
+                    }
+                } catch (e: Exception) {
+                    Log.e("SplashScreen", "Failed to initialize dummy data", e)
+                }
+            }
+
             delay(2000)
             onNavigateToLogin()
         } catch (e: Exception) {
             // If navigation fails, show error
             Log.e("SplashScreen", "Navigation failed", e)
+            // Still try to navigate even if dummy data fails
+            onNavigateToLogin()
         }
     }
 

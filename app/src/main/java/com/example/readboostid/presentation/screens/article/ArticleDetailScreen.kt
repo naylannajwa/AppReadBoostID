@@ -61,12 +61,22 @@ fun ArticleDetailScreen(
 
     // Reading state
     var timerSeconds by remember { mutableStateOf(0) }
-    var isReading by remember { mutableStateOf(false) }
+    var isReading by remember { mutableStateOf(true) } // Auto-start reading
     var showNotesPanel by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
     var controlsVisible by remember { mutableStateOf(true) }
 
     val listState = rememberLazyListState()
+
+    // Auto-start reading when article loads
+    LaunchedEffect(uiState.article) {
+        val article = uiState.article
+        if (article != null && !isReading) {
+            println("ArticleDetailScreen: Auto-starting reading for article: ${article.title}")
+            isReading = true
+            viewModel.startReading()
+        }
+    }
 
     // Scroll tracking for reading activity
     val isScrolling by remember {
@@ -80,8 +90,10 @@ fun ArticleDetailScreen(
     LaunchedEffect(isScrolling) {
         if (isScrolling) {
             lastScrollTime = System.currentTimeMillis()
+            println("ArticleDetailScreen: User scrolled at ${lastScrollTime}")
             if (!isReading) {
                 isReading = true
+                println("ArticleDetailScreen: Auto-started reading due to scroll")
             }
         }
     }
@@ -121,13 +133,20 @@ fun ArticleDetailScreen(
                 if (timeSinceLastScroll <= 10000L) {
                     val activeTimeIncrement = currentTime - lastUpdateTime
                     timerSeconds += (activeTimeIncrement / 1000).toInt()
+                    println("ArticleDetailScreen: Active reading - increment: ${activeTimeIncrement}ms, total timer: ${timerSeconds}s")
                     viewModel.updateReadingTime(activeTimeIncrement)
 
                     val targetSeconds = (uiState.article?.duration ?: 0) * 60
+                    val minimumReadingSeconds = 30 // Minimum 30 seconds to complete article
+
+                    // Continue timer until target reached, but allow manual completion anytime
                     if (timerSeconds >= targetSeconds) {
+                        println("ArticleDetailScreen: Article completed (target reached) - ${timerSeconds}s timer")
                         viewModel.completeReading()
                         break
                     }
+                } else {
+                    println("ArticleDetailScreen: No active reading - last scroll was ${timeSinceLastScroll}ms ago")
                 }
 
                 lastUpdateTime = currentTime
@@ -329,6 +348,10 @@ fun ArticleDetailScreen(
                             } else {
                                 viewModel.pauseReading()
                             }
+                        },
+                        onCompleteReading = {
+                            println("ArticleDetailScreen: Manual complete reading triggered")
+                            viewModel.completeReading()
                         }
                     )
                 }
@@ -394,7 +417,8 @@ fun ReadingProgressOverlay(
     elapsedSeconds: Int,
     targetMinutes: Int,
     isReading: Boolean,
-    onToggleReading: () -> Unit
+    onToggleReading: () -> Unit,
+    onCompleteReading: () -> Unit = {}
 ) {
     val minutes = elapsedSeconds / 60
     val seconds = elapsedSeconds % 60
@@ -471,26 +495,45 @@ fun ReadingProgressOverlay(
                 }
             }
 
-            // Play/Pause button
-            FilledIconButton(
-                onClick = onToggleReading,
-                modifier = Modifier.size(44.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = if (isReading)
-                        MaterialTheme.colorScheme.primaryContainer
-                    else
-                        MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Icon(
-                    if (isReading) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isReading) "Pause reading" else "Start reading",
-                    tint = if (isReading)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(20.dp)
-                )
+            // Control buttons
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Complete button
+                FilledIconButton(
+                    onClick = onCompleteReading,
+                    modifier = Modifier.size(44.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = "Complete reading",
+                        tint = MaterialTheme.colorScheme.onSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Play/Pause button
+                FilledIconButton(
+                    onClick = onToggleReading,
+                    modifier = Modifier.size(44.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (isReading)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        if (isReading) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isReading) "Pause reading" else "Start reading",
+                        tint = if (isReading)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

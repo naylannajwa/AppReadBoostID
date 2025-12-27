@@ -4,6 +4,7 @@ package com.readboost.id.presentation.screens.leaderboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.readboost.id.data.model.Leaderboard
+import com.readboost.id.data.service.DummyDataGenerator
 import com.readboost.id.domain.repository.FirestoreLeaderboardRepository
 import com.readboost.id.domain.repository.UserDataRepository
 import kotlinx.coroutines.flow.*
@@ -36,60 +37,68 @@ class LeaderboardViewModel(
         loadLeaderboard()
     }
 
-    private fun loadLeaderboard() {
+    fun loadLeaderboard() {
         viewModelScope.launch {
             try {
-                // Try Firestore first
-                firestoreRepository.getLeaderboardFlow(50)
-                    .collect { leaderboard ->
-                        // For now, use same data for weekly and all-time
-                        // In real app, you would have separate collections for weekly data
-                        val weeklyData = leaderboard
-                        val allTimeData = leaderboard
+                println("LeaderboardViewModel: Loading leaderboard from Firestore...")
 
-                        // Calculate rank changes
-                        val currentRanks = leaderboard.associate { it.userId to it.rank }
-                        val rankChanges = previousRanks.mapValues { (userId, oldRank) ->
-                            val newRank = currentRanks[userId] ?: oldRank
-                            newRank - oldRank // Negative = improved, Positive = declined
-                        }
-                        previousRanks = currentRanks
+                // Load both weekly and all-time data
+                val allTimeData = firestoreRepository.getAllTimeLeaderboard(50)
+                val weeklyData = firestoreRepository.getWeeklyLeaderboard(50)
 
-                        _uiState.update {
-                            it.copy(
-                                leaderboard = if (it.selectedFilter == TimeFilter.Weekly) weeklyData else allTimeData,
-                                weeklyLeaderboard = weeklyData,
-                                allTimeLeaderboard = allTimeData,
-                                isLoading = false
-                            )
-                        }
-                    }
+                println("LeaderboardViewModel: Loaded ${allTimeData.size} all-time entries")
+                println("LeaderboardViewModel: Loaded ${weeklyData.size} weekly entries")
+
+                allTimeData.forEach { entry ->
+                    println("LeaderboardViewModel: All-time - ${entry.username}: ${entry.totalXP} XP (Rank: ${entry.rank})")
+                }
+
+                // Calculate rank changes for current filter
+                val currentLeaderboard = if (_uiState.value.selectedFilter == TimeFilter.Weekly) weeklyData else allTimeData
+                val currentRanks = currentLeaderboard.associate { it.userId to it.rank }
+                val rankChanges = previousRanks.mapValues { (userId, oldRank) ->
+                    val newRank = currentRanks[userId] ?: oldRank
+                    newRank - oldRank // Negative = improved, Positive = declined
+                }
+                previousRanks = currentRanks
+
+                _uiState.update {
+                    it.copy(
+                        leaderboard = currentLeaderboard,
+                        weeklyLeaderboard = weeklyData,
+                        allTimeLeaderboard = allTimeData,
+                        isLoading = false
+                    )
+                }
+
+                println("LeaderboardViewModel: Leaderboard state updated - showing ${currentLeaderboard.size} entries")
+
             } catch (e: Exception) {
+                println("LeaderboardViewModel: Error loading from Firestore: ${e.message}")
+                e.printStackTrace()
+
                 // Fallback to local database
-                userDataRepository.getAllLeaderboard()
-                    .collect { leaderboard ->
-                        val sorted = leaderboard.sortedByDescending { it.totalXP }
-                            .mapIndexed { index, entry -> entry.copy(rank = index + 1) }
+                try {
+                    userDataRepository.getAllLeaderboard()
+                        .collect { leaderboard ->
+                            val sorted = leaderboard.sortedByDescending { it.totalXP }
+                                .mapIndexed { index, entry -> entry.copy(rank = index + 1) }
 
-                        val weeklyData = sorted
-                        val allTimeData = sorted
+                            _uiState.update {
+                                it.copy(
+                                    leaderboard = sorted,
+                                    weeklyLeaderboard = sorted,
+                                    allTimeLeaderboard = sorted,
+                                    isLoading = false
+                                )
+                            }
 
-                        val currentRanks = sorted.associate { it.userId to it.rank }
-                        val rankChanges = previousRanks.mapValues { (userId, oldRank) ->
-                            val newRank = currentRanks[userId] ?: oldRank
-                            newRank - oldRank
+                            println("LeaderboardViewModel: Fallback to local database - ${sorted.size} entries")
                         }
-                        previousRanks = currentRanks
-
-                        _uiState.update {
-                            it.copy(
-                                leaderboard = if (it.selectedFilter == TimeFilter.Weekly) weeklyData else allTimeData,
-                                weeklyLeaderboard = weeklyData,
-                                allTimeLeaderboard = allTimeData,
-                                isLoading = false
-                            )
-                        }
-                    }
+                } catch (localException: Exception) {
+                    println("LeaderboardViewModel: Error loading from local database: ${localException.message}")
+                    _uiState.update { it.copy(isLoading = false) }
+                }
             }
         }
     }
@@ -99,11 +108,37 @@ class LeaderboardViewModel(
             TimeFilter.Weekly -> _uiState.value.weeklyLeaderboard
             TimeFilter.AllTime -> _uiState.value.allTimeLeaderboard
         }
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 selectedFilter = filter,
                 leaderboard = leaderboard
-            ) 
+            )
         }
+    }
+
+    // Method untuk testing - force refresh dengan dummy data
+    fun refreshWithDummyData() {
+        viewModelScope.launch {
+            try {
+                println("LeaderboardViewModel: Refreshing with dummy data...")
+                _uiState.update { it.copy(isLoading = true) }
+
+                // Force regenerate dummy data
+                DummyDataGenerator.forceRegenerateDummyData()
+
+                // Reload leaderboard
+                loadLeaderboard()
+
+                println("LeaderboardViewModel: Dummy data refresh completed")
+            } catch (e: Exception) {
+                println("LeaderboardViewModel: Error refreshing dummy data: ${e.message}")
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun forceRefreshLeaderboard() {
+        println("LeaderboardViewModel: Force refresh leaderboard requested")
+        loadLeaderboard()
     }
 }

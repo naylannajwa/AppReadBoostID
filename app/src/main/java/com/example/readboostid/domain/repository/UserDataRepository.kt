@@ -42,8 +42,6 @@ class UserDataRepository(
     suspend fun updateStreak(streak: Int, date: Long) = 
         userProgressDao.updateStreak(streak, date)
 
-    suspend fun addReadingTime(seconds: Int) = userProgressDao.addReadingTime(seconds)
-
     suspend fun updateDailyTarget(target: Int) = userProgressDao.updateDailyTarget(target)
 
     // Leaderboard operations

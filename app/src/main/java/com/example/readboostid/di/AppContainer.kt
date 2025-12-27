@@ -7,6 +7,7 @@ import com.readboost.id.data.local.UserPreferences
 import com.readboost.id.data.local.database.AppDatabase
 import com.readboost.id.data.service.FirebaseAuthService
 import com.readboost.id.data.service.FirestoreLeaderboardService
+import com.readboost.id.data.service.HybridDataManager
 import com.readboost.id.data.repository.FirestoreLeaderboardRepositoryImpl
 import com.readboost.id.domain.repository.ArticleRepository
 import com.readboost.id.domain.repository.FirestoreLeaderboardRepository
@@ -75,5 +76,18 @@ class AppContainer(private val context: Context) {
         val repo = FirestoreLeaderboardRepositoryImpl(firestoreLeaderboardService)
         Log.d("AppContainer", "FirestoreLeaderboardRepository initialized successfully")
         repo
+    }
+
+    val hybridDataManager: HybridDataManager by lazy {
+        Log.d("AppContainer", "Initializing hybridDataManager...")
+        val manager = HybridDataManager(userDataRepository, firestoreLeaderboardRepository)
+        Log.d("AppContainer", "HybridDataManager initialized successfully")
+        manager
+    }
+
+    // Initialize dummy data on first access
+    init {
+        // Note: Dummy data initialization will be called from MainActivity or Splash
+        Log.d("AppContainer", "AppContainer initialized successfully")
     }
 }

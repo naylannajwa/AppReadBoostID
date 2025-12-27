@@ -14,7 +14,8 @@ data class FirestoreUserProgress(
     val totalXP: Int = 0,
     val streakDays: Int = 0,
     val dailyTarget: Int = 5, // dalam menit
-    val totalReadingTime: Int = 0, // dalam detik
+    val dailyXPEarned: Int = 0, // XP yang didapat hari ini
+    val dailyReadingMinutes: Int = 0, // Menit membaca yang sudah dilakukan hari ini
     val articlesRead: Int = 0,
     val lastReadDate: Long = 0L,
     val currentStreakStartDate: Long = 0L,
@@ -29,7 +30,8 @@ data class LeaderboardEntry(
     val email: String = "",
     val totalXP: Int = 0,
     val streakDays: Int = 0,
-    val totalReadingTime: Int = 0, // dalam detik
+    val dailyXPEarned: Int = 0, // XP yang didapat hari ini
+    val dailyReadingMinutes: Int = 0, // Menit membaca yang sudah dilakukan hari ini
     val rank: Int = 0,
     val avatarUrl: String? = null
 )
@@ -45,8 +47,6 @@ data class FirestoreReadingSession(
     val totalScrollDistance: Float = 0f,
     val lastScrollPosition: Float = 0f,
     val xpEarned: Int = 0,
-    val timeSpent: Int = 0, // dalam detik
-    val completed: Boolean = false,
     @ServerTimestamp
     val createdAt: Date? = null
 )

@@ -12,5 +12,6 @@ data class UserProgress(
     val streakDays: Int = 0,
     val dailyTarget: Int = 2, // 2, 5, atau 10 menit
     val lastReadDate: Long = 0L,
-    val totalReadingTime: Int = 0 // total waktu membaca dalam detik
+    val dailyXPEarned: Int = 0, // XP yang sudah didapat hari ini
+    val dailyReadingMinutes: Int = 0 // Menit membaca yang sudah dilakukan hari ini
 )
