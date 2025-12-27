@@ -6,7 +6,10 @@ import android.util.Log
 import com.readboost.id.data.local.UserPreferences
 import com.readboost.id.data.local.database.AppDatabase
 import com.readboost.id.data.service.FirebaseAuthService
+import com.readboost.id.data.service.FirestoreLeaderboardService
+import com.readboost.id.data.repository.FirestoreLeaderboardRepositoryImpl
 import com.readboost.id.domain.repository.ArticleRepository
+import com.readboost.id.domain.repository.FirestoreLeaderboardRepository
 import com.readboost.id.domain.repository.UserDataRepository
 import com.readboost.id.domain.repository.UserRepository
 
@@ -58,5 +61,19 @@ class AppContainer(private val context: Context) {
         val service = FirebaseAuthService()
         Log.d("AppContainer", "FirebaseAuthService initialized successfully")
         service
+    }
+
+    val firestoreLeaderboardService: FirestoreLeaderboardService by lazy {
+        Log.d("AppContainer", "Initializing firestoreLeaderboardService...")
+        val service = FirestoreLeaderboardService()
+        Log.d("AppContainer", "FirestoreLeaderboardService initialized successfully")
+        service
+    }
+
+    val firestoreLeaderboardRepository: FirestoreLeaderboardRepository by lazy {
+        Log.d("AppContainer", "Initializing firestoreLeaderboardRepository...")
+        val repo = FirestoreLeaderboardRepositoryImpl(firestoreLeaderboardService)
+        Log.d("AppContainer", "FirestoreLeaderboardRepository initialized successfully")
+        repo
     }
 }

@@ -4,6 +4,7 @@ package com.readboost.id.presentation.screens.leaderboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.readboost.id.data.model.Leaderboard
+import com.readboost.id.domain.repository.FirestoreLeaderboardRepository
 import com.readboost.id.domain.repository.UserDataRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -21,7 +22,8 @@ enum class TimeFilter {
 }
 
 class LeaderboardViewModel(
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val firestoreRepository: FirestoreLeaderboardRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LeaderboardUiState())
@@ -36,34 +38,59 @@ class LeaderboardViewModel(
 
     private fun loadLeaderboard() {
         viewModelScope.launch {
-            userDataRepository.getAllLeaderboard()
-                .collect { leaderboard ->
-                    // Sort by totalXP descending
-                    val sorted = leaderboard.sortedByDescending { it.totalXP }
-                        .mapIndexed { index, entry -> entry.copy(rank = index + 1) }
-                    
-                    // For now, use same data for weekly and all-time
-                    // In real app, you would fetch separate weekly data
-                    val weeklyData = sorted // TODO: Replace with actual weekly data
-                    val allTimeData = sorted
-                    
-                    // Calculate rank changes
-                    val currentRanks = sorted.associate { it.userId to it.rank }
-                    val rankChanges = previousRanks.mapValues { (userId, oldRank) ->
-                        val newRank = currentRanks[userId] ?: oldRank
-                        newRank - oldRank // Negative = improved, Positive = declined
+            try {
+                // Try Firestore first
+                firestoreRepository.getLeaderboardFlow(50)
+                    .collect { leaderboard ->
+                        // For now, use same data for weekly and all-time
+                        // In real app, you would have separate collections for weekly data
+                        val weeklyData = leaderboard
+                        val allTimeData = leaderboard
+
+                        // Calculate rank changes
+                        val currentRanks = leaderboard.associate { it.userId to it.rank }
+                        val rankChanges = previousRanks.mapValues { (userId, oldRank) ->
+                            val newRank = currentRanks[userId] ?: oldRank
+                            newRank - oldRank // Negative = improved, Positive = declined
+                        }
+                        previousRanks = currentRanks
+
+                        _uiState.update {
+                            it.copy(
+                                leaderboard = if (it.selectedFilter == TimeFilter.Weekly) weeklyData else allTimeData,
+                                weeklyLeaderboard = weeklyData,
+                                allTimeLeaderboard = allTimeData,
+                                isLoading = false
+                            )
+                        }
                     }
-                    previousRanks = currentRanks
-                    
-                    _uiState.update { 
-                        it.copy(
-                            leaderboard = if (it.selectedFilter == TimeFilter.Weekly) weeklyData else allTimeData,
-                            weeklyLeaderboard = weeklyData,
-                            allTimeLeaderboard = allTimeData,
-                            isLoading = false
-                        ) 
+            } catch (e: Exception) {
+                // Fallback to local database
+                userDataRepository.getAllLeaderboard()
+                    .collect { leaderboard ->
+                        val sorted = leaderboard.sortedByDescending { it.totalXP }
+                            .mapIndexed { index, entry -> entry.copy(rank = index + 1) }
+
+                        val weeklyData = sorted
+                        val allTimeData = sorted
+
+                        val currentRanks = sorted.associate { it.userId to it.rank }
+                        val rankChanges = previousRanks.mapValues { (userId, oldRank) ->
+                            val newRank = currentRanks[userId] ?: oldRank
+                            newRank - oldRank
+                        }
+                        previousRanks = currentRanks
+
+                        _uiState.update {
+                            it.copy(
+                                leaderboard = if (it.selectedFilter == TimeFilter.Weekly) weeklyData else allTimeData,
+                                weeklyLeaderboard = weeklyData,
+                                allTimeLeaderboard = allTimeData,
+                                isLoading = false
+                            )
+                        }
                     }
-                }
+            }
         }
     }
 

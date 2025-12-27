@@ -31,10 +31,10 @@ class ViewModelFactory(
                 NotesViewModel(appContainer.userDataRepository) as T
             }
             modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
-                ProfileViewModel(appContainer.userDataRepository) as T
+                ProfileViewModel(appContainer.userDataRepository, appContainer.firestoreLeaderboardRepository) as T
             }
             modelClass.isAssignableFrom(LeaderboardViewModel::class.java) -> {
-                LeaderboardViewModel(appContainer.userDataRepository) as T
+                LeaderboardViewModel(appContainer.userDataRepository, appContainer.firestoreLeaderboardRepository) as T
             }
             modelClass.isAssignableFrom(LoginViewModel::class.java) -> {
                 LoginViewModel(appContainer.userRepository, appContainer.userPreferences, appContainer.firebaseAuthService) as T
@@ -71,7 +71,12 @@ class ArticleDetailViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ArticleDetailViewModel::class.java)) {
-            return ArticleDetailViewModel(appContainer.articleRepository, appContainer.userDataRepository, articleId) as T
+            return ArticleDetailViewModel(
+                appContainer.articleRepository,
+                appContainer.userDataRepository,
+                appContainer.firestoreLeaderboardRepository,
+                articleId
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }

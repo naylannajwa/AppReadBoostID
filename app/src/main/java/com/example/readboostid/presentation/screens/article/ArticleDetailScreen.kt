@@ -68,6 +68,35 @@ fun ArticleDetailScreen(
 
     val listState = rememberLazyListState()
 
+    // Scroll tracking for reading activity
+    val isScrolling by remember {
+        derivedStateOf {
+            listState.isScrollInProgress
+        }
+    }
+    var lastScrollTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+    // Update last scroll time when scrolling
+    LaunchedEffect(isScrolling) {
+        if (isScrolling) {
+            lastScrollTime = System.currentTimeMillis()
+            if (!isReading) {
+                isReading = true
+            }
+        }
+    }
+
+    // Check for reading inactivity (no scroll for 10 seconds = not actively reading)
+    LaunchedEffect(lastScrollTime) {
+        while (true) {
+            delay(1000L) // Check every second
+            val timeSinceLastScroll = System.currentTimeMillis() - lastScrollTime
+            if (timeSinceLastScroll > 10000L && isReading) { // 10 seconds of inactivity
+                isReading = false
+            }
+        }
+    }
+
     // Auto-hide controls after 3 seconds of inactivity
     LaunchedEffect(controlsVisible) {
         if (controlsVisible) {
@@ -76,18 +105,32 @@ fun ArticleDetailScreen(
         }
     }
 
-    // Reading timer
-    LaunchedEffect(isReading, uiState.readingSession?.isPaused) {
-        if (isReading && uiState.readingSession?.isPaused == false) {
-            while (true) {
-                delay(1000L)
-                timerSeconds++
-                viewModel.updateReadingTime(timerSeconds)
+    // Reading timer - only count when actively scrolling
+    LaunchedEffect(isReading) {
+        val session = uiState.readingSession
+        if (isReading && session != null && !session.isPaused) {
+            var lastUpdateTime = System.currentTimeMillis()
 
-                val targetSeconds = (uiState.article?.duration ?: 0) * 60
-                if (timerSeconds >= targetSeconds) {
-                    viewModel.completeReading()
+            while (true) {
+                delay(1000L) // Update every second
+
+                val currentTime = System.currentTimeMillis()
+                val timeSinceLastScroll = currentTime - lastScrollTime
+
+                // Only count time if user scrolled within last 10 seconds
+                if (timeSinceLastScroll <= 10000L) {
+                    val activeTimeIncrement = currentTime - lastUpdateTime
+                    timerSeconds += (activeTimeIncrement / 1000).toInt()
+                    viewModel.updateReadingTime(activeTimeIncrement)
+
+                    val targetSeconds = (uiState.article?.duration ?: 0) * 60
+                    if (timerSeconds >= targetSeconds) {
+                        viewModel.completeReading()
+                        break
+                    }
                 }
+
+                lastUpdateTime = currentTime
             }
         }
     }
@@ -221,7 +264,8 @@ fun ArticleDetailScreen(
 
                     // Reading completion status
                     item {
-                        if (uiState.readingSession?.isCompleted == true) {
+                        val session = uiState.readingSession
+                        if (session != null && session.isCompleted) {
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
