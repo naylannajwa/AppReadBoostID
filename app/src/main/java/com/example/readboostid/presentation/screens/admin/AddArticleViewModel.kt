@@ -76,7 +76,6 @@ class AddArticleViewModel(
             duration = duration,
             xp = calculatedXP.toString(),
             durationError = null,
-            xpError = null,
             errorMessage = null
         )
     }
@@ -84,7 +83,6 @@ class AddArticleViewModel(
     fun onXpChange(xp: String) {
         _uiState.value = _uiState.value.copy(
             xp = xp,
-            xpError = null,
             errorMessage = null
         )
     }
@@ -106,7 +104,6 @@ class AddArticleViewModel(
         var categoryError: String? = null
         var difficultyError: String? = null
         var durationError: String? = null
-        var xpError: String? = null
 
         if (currentState.title.isBlank()) {
             titleError = "Judul artikel tidak boleh kosong"

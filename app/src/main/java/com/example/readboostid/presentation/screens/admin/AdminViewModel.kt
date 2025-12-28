@@ -52,9 +52,14 @@ class AdminViewModel(
         viewModelScope.launch {
             try {
                 articleRepository.deleteArticleById(articleId)
+                _uiState.value = _uiState.value.copy(
+                    successMessage = "Artikel berhasil dihapus",
+                    errorMessage = null
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "Gagal menghapus artikel: ${e.message}"
+                    errorMessage = "Gagal menghapus artikel: ${e.message}",
+                    successMessage = null
                 )
             }
         }
@@ -62,5 +67,12 @@ class AdminViewModel(
 
     fun refreshArticles() {
         loadArticles()
+    }
+
+    fun clearMessages() {
+        _uiState.value = _uiState.value.copy(
+            successMessage = null,
+            errorMessage = null
+        )
     }
 }

@@ -24,7 +24,6 @@ data class EditArticleUiState(
     val categoryError: String? = null,
     val difficultyError: String? = null,
     val durationError: String? = null,
-    val xpError: String? = null,
     val errorMessage: String? = null,
     val isLoading: Boolean = false,
     val isUpdating: Boolean = false,
@@ -103,8 +102,12 @@ class EditArticleViewModel(
     }
 
     fun onDurationChange(duration: String) {
+        val durationInt = duration.toIntOrNull()
+        val calculatedXP = if (durationInt != null && durationInt > 0) durationInt * 100 else 0
+
         _uiState.value = _uiState.value.copy(
             duration = duration,
+            xp = calculatedXP.toString(),
             durationError = null,
             errorMessage = null
         )
@@ -113,7 +116,6 @@ class EditArticleViewModel(
     fun onXpChange(xp: String) {
         _uiState.value = _uiState.value.copy(
             xp = xp,
-            xpError = null,
             errorMessage = null
         )
     }
@@ -136,7 +138,6 @@ class EditArticleViewModel(
         var categoryError: String? = null
         var difficultyError: String? = null
         var durationError: String? = null
-        var xpError: String? = null
 
         if (currentState.title.isBlank()) {
             titleError = "Judul artikel tidak boleh kosong"
@@ -167,14 +168,7 @@ class EditArticleViewModel(
             hasError = true
         }
 
-        val xpInt = currentState.xp.toIntOrNull()
-        if (currentState.xp.isBlank()) {
-            xpError = "XP tidak boleh kosong"
-            hasError = true
-        } else if (xpInt == null || xpInt <= 0) {
-            xpError = "XP harus berupa angka positif"
-            hasError = true
-        }
+        // XP is now auto-calculated, no validation needed
 
         if (hasError) {
             _uiState.value = currentState.copy(
@@ -182,8 +176,7 @@ class EditArticleViewModel(
                 contentError = contentError,
                 categoryError = categoryError,
                 difficultyError = difficultyError,
-                durationError = durationError,
-                xpError = xpError
+                durationError = durationError
             )
             return
         }
@@ -202,7 +195,7 @@ class EditArticleViewModel(
                     category = currentState.category,
                     difficulty = currentState.difficulty,
                     duration = durationInt!!,
-                    xp = xpInt!!,
+                    xp = currentState.xp.toIntOrNull() ?: 0,
                     imageUrl = currentState.imageUrl.takeIf { it.isNotBlank() }
                 )
 

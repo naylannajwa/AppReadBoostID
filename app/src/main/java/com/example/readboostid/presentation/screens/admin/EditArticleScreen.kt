@@ -391,26 +391,25 @@ fun EditArticleForm(
                 value = uiState.xp,
                 onValueChange = onXpChange,
                 modifier = Modifier.weight(1f),
-                label = { Text("XP") },
+                label = { Text("XP (Otomatis)") },
                 placeholder = { Text("15") },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
-                isError = uiState.xpError != null
+                readOnly = true,
+                enabled = false,
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = Color.DarkGray,
+                    disabledContainerColor = Color.LightGray.copy(alpha = 0.3f),
+                    disabledBorderColor = Color.Gray,
+                    disabledLabelColor = Color.Gray,
+                    disabledPlaceholderColor = Color.Gray
+                )
             )
         }
 
         if (uiState.durationError != null) {
             Text(
                 text = uiState.durationError!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 16.dp)
-            )
-        }
-
-        if (uiState.xpError != null) {
-            Text(
-                text = uiState.xpError!!,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = 16.dp)
@@ -519,8 +518,8 @@ fun EditArticleScreenPreview() {
     ReadBoostTheme {
         EditArticleScreen(
             articleId = 1,
-            onNavigateBack = {},
-            onArticleUpdated = {}
+            onNavigateBack = { },
+            onArticleUpdated = { }
         )
     }
 }

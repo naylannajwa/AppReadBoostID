@@ -26,8 +26,8 @@ import com.readboost.id.ui.theme.ReadBoostTheme
  * 4. Nama: [ANINDYA AYU NABILAH], NIM: [23523268]
  *
  * Username & Password:
- * - Admin: username: admin, password: admin123
- * - User: username: user, password: user123
+ * - Admin: [username: admin, password: admin123]
+ * - User: [username: user, password: user123]
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

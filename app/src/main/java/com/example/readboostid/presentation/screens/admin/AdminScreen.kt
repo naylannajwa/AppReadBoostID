@@ -47,10 +47,32 @@ fun AdminScreen(
 
     val uiState by adminViewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // State for delete confirmation dialog
     var showDeleteDialog by remember { mutableStateOf(false) }
     var articleToDelete by remember { mutableStateOf<Article?>(null) }
+
+    // Show snackbar for messages
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let {
+            snackbarHostState.showSnackbar(
+                message = it,
+                duration = SnackbarDuration.Short
+            )
+            adminViewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            snackbarHostState.showSnackbar(
+                message = it,
+                duration = SnackbarDuration.Short
+            )
+            adminViewModel.clearMessages()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -155,6 +177,9 @@ fun AdminScreen(
                             onClick = {
                                 scope.launch {
                                     articleToDelete?.let { adminViewModel.deleteArticle(it.id) }
+                                    // Force refresh after deletion
+                                    kotlinx.coroutines.delay(100)
+                                    adminViewModel.refreshArticles()
                                 }
                                 showDeleteDialog = false
                                 articleToDelete = null

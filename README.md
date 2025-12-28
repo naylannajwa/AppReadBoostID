@@ -1,6 +1,6 @@
 # ReadBoost ID
 
-ReadBoost ID adalah aplikasi mobile berbasis Android yang dirancang untuk meningkatkan minat dan kemampuan literasi masyarakat Indonesia melalui pengalaman membaca yang lebih menarik, adaptif, dan interaktif. Aplikasi ini menggabungkan konten bacaan, gamifikasi, serta sistem CRUD untuk admin dalam mengelola konten literasi.
+ReadBoost ID adalah aplikasi mobile berbasis Android yang dirancang untuk meningkatkan minat dan kemampuan literasi masyarakat Indonesia melalui pengalaman membaca yang lebih menarik, adaptif, dan interaktif. Aplikasi ini menggabungkan konten bacaan berkualitas, sistem gamifikasi dengan XP dan streak, leaderboard kompetitif, serta panel admin untuk manajemen konten.
 
 ## 📋 Daftar Isi
 - [Fitur Utama](#-fitur-utama)
@@ -109,6 +109,18 @@ app/src/main/java/com/example/readboostid/
 │   └── viewmodel/      # ViewModels
 └── ui/theme/           # UI theming
 ```
+
+## 🗄️ Desain Database
+
+ReadBoost ID menggunakan arsitektur database hybrid yang menggabungkan Room Database untuk penyimpanan lokal dan Firebase Firestore untuk data real-time.
+
+Untuk detail lengkap mengenai struktur database, entitas, DAO, dan strategi sinkronisasi data, silakan lihat file **[DATABASE_DESIGN.md](DATABASE_DESIGN.md)**.
+
+## 🎨 Desain Antarmuka
+
+ReadBoost ID menggunakan Jetpack Compose dengan Material Design 3 untuk menciptakan antarmuka yang modern dan konsisten.
+
+Untuk detail lengkap mengenai tema, komponen UI, screen layouts, navigation, dan responsive design, silakan lihat file **[INTERFACE_DESIGN.md](INTERFACE_DESIGN.md)**.
 
 ## 👥 Tim Pengembang
 

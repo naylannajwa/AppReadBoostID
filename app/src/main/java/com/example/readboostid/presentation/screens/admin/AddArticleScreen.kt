@@ -367,15 +367,6 @@ fun AddArticleForm(
             )
         }
 
-        if (uiState.xpError != null) {
-            Text(
-                text = uiState.xpError.orEmpty(),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 16.dp)
-            )
-        }
-
         // Image URL field
         OutlinedTextField(
             value = uiState.imageUrl,
