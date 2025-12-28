@@ -8,10 +8,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.readboostid.presentation.screens.admin.AddArticleScreen
+import com.example.readboostid.presentation.screens.auth.RegistrationScreen
 import com.readboost.id.presentation.screens.splash.SplashScreen
 import com.readboost.id.presentation.screens.welcome.WelcomeScreen
 import com.readboost.id.presentation.screens.auth.LoginScreen
-import com.readboost.id.presentation.screens.auth.RegistrationScreen
 import com.readboost.id.presentation.screens.admin.AdminAuthScreen
 import com.readboost.id.presentation.screens.admin.AdminDashboardScreen
 import com.readboost.id.presentation.screens.admin.AdminScreen

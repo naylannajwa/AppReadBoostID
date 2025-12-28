@@ -1,6 +1,7 @@
 // File: presentation/screens/home/HomeScreen.kt
 package com.readboost.id.presentation.screens.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import coil.compose.AsyncImage
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.readboost.id.R
 import com.readboost.id.ReadBoostApplication
 import com.readboost.id.data.model.Article
 import com.readboost.id.presentation.viewmodel.ViewModelFactory
@@ -224,11 +227,10 @@ fun HeaderSection(
                 horizontalArrangement = Arrangement.Start
             ) {
                 // Logo icon
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                Image(
+                    painter = painterResource(id = R.drawable.logorb),
                     contentDescription = "Logo ReadBoost",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(40.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 // Nama aplikasi

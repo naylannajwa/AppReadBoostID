@@ -1,6 +1,7 @@
 // File: presentation/screens/auth/LoginScreen.kt
 package com.readboost.id.presentation.screens.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.readboost.id.R
 import com.readboost.id.ReadBoostApplication
 import com.readboost.id.presentation.viewmodel.ViewModelFactory
 import com.readboost.id.ui.theme.ReadBoostTheme
@@ -140,11 +143,10 @@ fun HeaderSection() {
                 horizontalArrangement = Arrangement.Start
             ) {
                 // Logo icon
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                Image(
+                    painter = painterResource(id = R.drawable.logorb),
                     contentDescription = "Logo ReadBoost",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(40.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 // Nama aplikasi

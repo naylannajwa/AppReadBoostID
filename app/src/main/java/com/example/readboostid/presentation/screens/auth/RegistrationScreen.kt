@@ -1,6 +1,6 @@
-// File: presentation/screens/auth/RegistrationScreen.kt
-package com.readboost.id.presentation.screens.auth
+package com.example.readboostid.presentation.screens.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,10 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -25,7 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.readboost.id.R
 import com.readboost.id.ReadBoostApplication
+import com.readboost.id.presentation.screens.auth.RegistrationUiState
+import com.readboost.id.presentation.screens.auth.RegistrationViewModel
 import com.readboost.id.presentation.viewmodel.ViewModelFactory
 import com.readboost.id.ui.theme.ReadBoostTheme
 import kotlinx.coroutines.delay
@@ -171,12 +174,10 @@ fun RegistrationHeaderSection() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
-                // Logo icon
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = "ReadBoost Logo",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.logorb),
+                    contentDescription = "Logo ReadBoost",
+                    modifier = Modifier.size(40.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 // Nama aplikasi
@@ -372,7 +373,7 @@ fun RegistrationForm(
             onValueChange = onPasswordChange,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Password") },
-            placeholder = { Text("Minimal 6 karakter") },
+            placeholder = { Text("Masukkan password Anda") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Lock,
@@ -384,7 +385,7 @@ fun RegistrationForm(
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        contentDescription = if (passwordVisible) "Sembunyikan password" else "Tampilkan password",
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
@@ -422,7 +423,7 @@ fun RegistrationForm(
             onValueChange = onConfirmPasswordChange,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Konfirmasi Password") },
-            placeholder = { Text("Ulangi password Anda") },
+            placeholder = { Text("Ketik ulang password Anda") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Lock,
@@ -434,7 +435,7 @@ fun RegistrationForm(
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                     Icon(
                         imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
+                        contentDescription = if (confirmPasswordVisible) "Sembunyikan password" else "Tampilkan password",
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
