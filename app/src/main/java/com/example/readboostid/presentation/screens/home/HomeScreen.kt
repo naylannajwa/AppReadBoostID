@@ -281,10 +281,10 @@ fun HeaderSection(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data("https://firebasestorage.googleapis.com/v0/b/readboost-9999.appspot.com/o/readboost_banner.png?alt=media&token=12345678-1234-1234-1234-1234567890ab")
+                        .data("https://picsum.photos/id/24/800/400")
                         .crossfade(true)
                         .build(),
-                    contentDescription = "ReadBoost Banner",
+                    contentDescription = "Buku Terbuka",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -298,7 +298,7 @@ fun HeaderSection(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Platform pembelajaran yang membantu Anda meningkatkan pengetahuan melalui artikel berkualitas dalam berbagai kategori menarik.",
+                    text = "Platform pembelajaran yang membantu Anda meningkatkan pengetahuan melalui artikel berkualitas.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f),
                     lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.2f,

@@ -188,10 +188,10 @@ fun HeaderSection() {
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data("https://firebasestorage.googleapis.com/v0/b/readboost-9999.appspot.com/o/login_banner.png?alt=media&token=abcdef12-3456-7890-abcd-ef1234567890")
+                        .data("https://picsum.photos/id/24/800/400")
                         .crossfade(true)
                         .build(),
-                    contentDescription = "Login Banner",
+                    contentDescription = "Buku Terbuka",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
