@@ -19,7 +19,7 @@ import com.readboost.id.ui.theme.ReadBoostTheme
  * ReadBoost ID - Aplikasi Literasi Digital
  * Tugas Besar PAB 2025
  *
- * Anggota Kelompok:
+ * Anggota Kelompok 4951:
  * 1. Nama: [NAYLANNAJWA JIHANA UMMA], NIM: [23523183]
  * 2. Nama: [ERFINA SAFITRI], NIM: [23523192]
  * 3. Nama: [PAMELA NAJLA GHASSANI], NIM: [23523249]
