@@ -110,18 +110,6 @@ app/src/main/java/com/example/readboostid/
 └── ui/theme/           # UI theming
 ```
 
-## 🗄️ Desain Database
-
-ReadBoost ID menggunakan arsitektur database hybrid yang menggabungkan Room Database untuk penyimpanan lokal dan Firebase Firestore untuk data real-time.
-
-Untuk detail lengkap mengenai struktur database, entitas, DAO, dan strategi sinkronisasi data, silakan lihat file **[DATABASE_DESIGN.md](DATABASE_DESIGN.md)**.
-
-## 🎨 Desain Antarmuka
-
-ReadBoost ID menggunakan Jetpack Compose dengan Material Design 3 untuk menciptakan antarmuka yang modern dan konsisten.
-
-Untuk detail lengkap mengenai tema, komponen UI, screen layouts, navigation, dan responsive design, silakan lihat file **[INTERFACE_DESIGN.md](INTERFACE_DESIGN.md)**.
-
 ## 👥 Tim Pengembang
 
 **Tugas Besar PAB 2025 - Kelompok 4951**
