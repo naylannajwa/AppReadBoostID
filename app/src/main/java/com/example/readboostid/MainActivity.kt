@@ -24,6 +24,7 @@ import com.readboost.id.ui.theme.ReadBoostTheme
  * 2. Nama: [ERFINA SAFITRI], NIM: [23523192]
  * 3. Nama: [PAMELA NAJLA GHASSANI], NIM: [23523249]
  * 4. Nama: [ANINDYA AYU NABILAH], NIM: [23523268]
+ * 5. Nama: [FAIZ GALEN GANENDRA], NIM: [23523110]
  *
  * Username & Password:
  * - Admin: [username: admin, password: admin123]

@@ -130,6 +130,7 @@ Untuk detail lengkap mengenai tema, komponen UI, screen layouts, navigation, dan
 2. **ERFINA SAFITRI** - NIM: 23523192
 3. **PAMELA NAJLA GHASSANI** - NIM: 23523249
 4. **ANINDYA AYU NABILAH** - NIM: 23523268
+5. **FAIZ GALEN GANENDRA** - NIM: 23523110
 
 ---
 
