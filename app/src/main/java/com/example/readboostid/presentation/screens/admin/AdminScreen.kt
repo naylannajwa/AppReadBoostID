@@ -175,12 +175,7 @@ fun AdminScreen(
                     confirmButton = {
                         Button(
                             onClick = {
-                                scope.launch {
-                                    articleToDelete?.let { adminViewModel.deleteArticle(it.id) }
-                                    // Force refresh after deletion
-                                    kotlinx.coroutines.delay(100)
-                                    adminViewModel.refreshArticles()
-                                }
+                                articleToDelete?.let { adminViewModel.deleteArticle(it.id) }
                                 showDeleteDialog = false
                                 articleToDelete = null
                             },

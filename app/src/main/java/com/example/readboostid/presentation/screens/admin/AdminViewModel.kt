@@ -52,7 +52,9 @@ class AdminViewModel(
         viewModelScope.launch {
             try {
                 articleRepository.deleteArticleById(articleId)
+                val updatedArticles = _uiState.value.articles.filterNot { it.id == articleId }
                 _uiState.value = _uiState.value.copy(
+                    articles = updatedArticles,
                     successMessage = "Artikel berhasil dihapus",
                     errorMessage = null
                 )
